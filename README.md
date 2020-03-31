@@ -1,5 +1,6 @@
 # timer
 A small timer
+> https://nice-timer.web.app
 
 ## Fonctions
 - Synchronized between computer and phone
