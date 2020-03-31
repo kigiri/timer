@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timer</title>
+<style>
+/* reset */
+*, *:before, *:after { box-sizing: border-box }
+html { font-size: 16px }
+body, h1, h2, h3, h4, h5, h6, p, ol, ul { margin: 0; padding: 0; font-weight: normal }
+ol, ul { list-style: none }
+img { max-width: 100%; height: auto }
+
+/* da style */
+body {
+  font-size: 30vw;
+  cursor: pointer;
+}
+
+#timer {
+  font-family: monospace;
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  align-items: center;
+  user-select: none;
+  transition: opacity 250ms;
+}
+
+#min { font-weight: bold }
+
+/* da colors */
+
+#sec { color: #aaa }
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #111;
+    color: #eee;
+  }
+
+  #sec { color: #555 }
+}
+</style>
+</head>
+<body>
+<div id="timer"><div id="min">00</div><div id="sec">00</div></div>
+<script type="module">
+const minEl = document.getElementById('min')
+const secEl = document.getElementById('sec')
+let _interval
+
+const tick = () => {
+  const delta = Date.now() - Number(localStorage.start)
+  minEl.textContent = String(Math.floor(delta / 60000)).padStart(2, '0')
+  secEl.textContent = String(Math.floor(delta / 1000) % 60).padStart(2, '0')
+}
+
+addEventListener('click', () => {
+  localStorage.start = Date.now()
+  tick()
+  clearInterval(_interval)
+  _interval = setInterval(tick, 1000)
+})
+
+if (localStorage.start) {
+  document.getElementById('timer').style.opacity = 0
+  setTimeout(() => document.getElementById('timer').style.opacity = 1, 15)
+  _interval = setInterval(tick, 1000)
+  tick()
+}
+
+</script>
+</body>
+</html>
