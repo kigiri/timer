@@ -59,7 +59,7 @@ body, button {
 </style>
 </head>
 <body>
-<button id="sign-in">sign-in</button>
+<button id="sign-in" disabled>sign-in</button>
 <div id="timer" class="work"><div id="min">00</div><div id="sec">00</div></div>
 <script>
 'use strict'
@@ -67,7 +67,7 @@ const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
 const timerEl = document.getElementById('timer')
 const signInEl = document.getElementById('sign-in')
-let _interval, _db, _work = false
+let _timeout, _db, _work = false
 
 const save = async (now, prev) => {
   if (!_db) {
@@ -82,29 +82,32 @@ const save = async (now, prev) => {
     .set({ ts: now, work: localStorage.work === 'work' })
 }
 
-const tick = () => {
-  const delta = Date.now() - Number(localStorage.start)
+const update = () => {
+  const start = Number(localStorage.start)
+  const now = Date.now()
+  const delta = now - Number(localStorage.start)
+  timerEl.classList.toggle('work', localStorage.work === 'work')
   minEl.textContent = String(Math.floor(delta / 60000)).padStart(2, '0')
   secEl.textContent = String(Math.floor(delta / 1000) % 60).padStart(2, '0')
+  const next = (Math.floor((start + delta) / 1000) + 1)*1000
+  clearTimeout(_timeout)
+  _timeout = setTimeout(update, next - now)
 }
+
+const toggleWork = work => localStorage.work = work ? 'work' : ''
 
 timerEl.addEventListener('click', (e) => {
   const now = Date.now()
-  const work = localStorage.work !== 'work'
-  timerEl.classList.toggle('work', work)
+  toggleWork(localStorage.work !== 'work')
   save(now, Number(localStorage.start))
-  localStorage.work = work ? 'work' : ''
   localStorage.start = now
-  clearInterval(_interval)
-  _interval = setInterval(tick, 1000)
-  tick()
+  update()
 })
 
 if (localStorage.start) {
   timerEl.style.opacity = 0
   setTimeout(() => timerEl.style.opacity = 1, 15)
-  _interval = setInterval(tick, 1000)
-  tick()
+  update()
 }
 
 
@@ -117,7 +120,7 @@ const loadScript = async urls => {
   document.head.appendChild(el)
 }
 
-const init = async () => {
+const load = async () => {
   await loadScript([
     '/__/firebase/7.13.1/firebase-app.js',
     '/__/firebase/7.13.1/firebase-auth.js',
@@ -143,13 +146,21 @@ const getUser = () => new Promise((s) => {
   firebase.auth().onAuthStateChanged(s)
 })
 
-init().catch(console.error).then(async app => {
-  if (!app) return
+const init = async app => {
+  signInEl.disabled = false
+  if (!app) {
+    signInEl.textContent = `offline, retry`
+    signInEl.onclick = () => {
+      signInEl.disabled = true
+      load().catch(console.error).then(init)
+    }
+    return
+  }
   const { user, error } = await auth()
   signInEl.style.opacity = 1
   if (!user) {
     error && console.dir(error)
-    signInEl.addEventListener('click', signIn)
+    signInEl.onclick = signIn
     return
   }
   _db = false
@@ -158,10 +169,22 @@ init().catch(console.error).then(async app => {
   setTimeout(() => signInEl.style.opacity = '', 35000)
   const db = firebase.database()
   const timers = db.ref(user.uid)
+  const lastTimers = timers.orderByChild('ts').limitToLast(1)
 
 
+  lastTimers.on('child_added', snap => {
+    const { ts, work, ...rest } = snap.val()
+    if (ts < Number(localStorage.start)) return
+    localStorage.start = ts
+    toggleWork(work)
+    update()
+  })
+
+  timers.child(Date.now().toString(36))
   _db = { timers }
-})
+}
+
+load().catch(console.error).then(init)
 
 
 </script>
