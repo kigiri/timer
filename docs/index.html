@@ -174,11 +174,18 @@ const init = async app => {
 
   lastTimers.on('child_added', snap => {
     const { ts, work, ...rest } = snap.val()
+  const apply = snap => {
+    if (!snap || !snap.val) return
+    const { ts, work } = snap.val()
     if (ts < Number(localStorage.start)) return
     localStorage.start = ts
     toggleWork(work)
     update()
-  })
+  }
+
+  const [last] = Object.values((await lastTimers.once('value')).val() || {})
+  last && apply(last)
+  lastTimers.on('child_added', apply)
 
   timers.child(Date.now().toString(36))
   _db = { timers }
