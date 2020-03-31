@@ -18,8 +18,10 @@ body, button {
   font-family: monospace;
 }
 
+#timer.work { font-size: 30vw; font-style: normal }
 #timer {
-  font-size: 30vw;
+  font-size: 20vw;
+  font-style: italic;
   display: flex;
   justify-content: center;
   height: 100vh;
@@ -58,14 +60,27 @@ body, button {
 </head>
 <body>
 <button id="sign-in">sign-in</button>
-<div id="timer"><div id="min">00</div><div id="sec">00</div></div>
+<div id="timer" class="work"><div id="min">00</div><div id="sec">00</div></div>
 <script>
 'use strict'
 const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
 const timerEl = document.getElementById('timer')
 const signInEl = document.getElementById('sign-in')
-let _interval, _offline = true
+let _interval, _db, _work = false
+
+const save = async (now, prev) => {
+  if (!_db) {
+    localStorage.stack = `${(localStorage.stack || '')}${now},${prev}\n`
+    console.log('offline update', localStorage.stack)
+    return
+  }
+
+  // get prev, update duration
+  await _db.timers
+    .child(now.toString(36))
+    .set({ ts: now, work: localStorage.work === 'work' })
+}
 
 const tick = () => {
   const delta = Date.now() - Number(localStorage.start)
@@ -74,10 +89,15 @@ const tick = () => {
 }
 
 timerEl.addEventListener('click', (e) => {
-  localStorage.start = Date.now()
-  tick()
+  const now = Date.now()
+  const work = localStorage.work !== 'work'
+  timerEl.classList.toggle('work', work)
+  save(now, Number(localStorage.start))
+  localStorage.work = work ? 'work' : ''
+  localStorage.start = now
   clearInterval(_interval)
   _interval = setInterval(tick, 1000)
+  tick()
 })
 
 if (localStorage.start) {
@@ -132,12 +152,16 @@ init().catch(console.error).then(async app => {
     signInEl.addEventListener('click', signIn)
     return
   }
-  _offline = false
+  _db = false
   signInEl.textContent = `${user.email} sign-out`
   // todo, handle sign out
   setTimeout(() => signInEl.style.opacity = '', 35000)
-})
+  const db = firebase.database()
+  const timers = db.ref(user.uid)
 
+
+  _db = { timers }
+})
 
 
 </script>
