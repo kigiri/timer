@@ -71,7 +71,8 @@ let _timeout, _db, _work = false
 
 const save = async (now, prev) => {
   if (!_db) {
-    localStorage.stack = `${(localStorage.stack || '')}${now},${prev}\n`
+    const w = Number(localStorage.work === 'work')
+    localStorage.stack = `${(localStorage.stack || '')}${now},${prev||0},${w}\n`
     console.log('offline update', localStorage.stack)
     return
   }
