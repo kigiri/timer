@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nice Timer</title>
+<style>
+/* reset */
+*, *:before, *:after { box-sizing: border-box }
+html { font-size: 16px }
+body, h1, h2, h3, h4, h5, h6, p, ol, ul { margin: 0; padding: 0; font-weight: normal }
+ol, ul { list-style: none }
+img { max-width: 100%; height: auto }
+
+/* da style */
+body, button {
+  cursor: pointer;
+  font-family: monospace;
+}
+
+#timer {
+  font-size: 30vw;
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  align-items: center;
+  user-select: none;
+  transition: opacity 250ms;
+}
+
+#min { font-weight: bold }
+#sign-in:hover { opacity: 1 }
+#sign-in {
+  opacity: 0;
+  transition: opacity 750ms;
+  position: fixed;
+  border: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 1;
+  transition: opacity 750ms;
+}
+
+/* da colors */
+#sec { color: #aaa }
+@media (prefers-color-scheme: dark) {
+  button, body {
+    background: #111;
+    color: #eee;
+  }
+
+  #sec { color: #555 }
+}
+</style>
+</head>
+<body>
+<button id="sign-in">sign-in</button>
+<div id="timer"><div id="min">00</div><div id="sec">00</div></div>
+<script>
+'use strict'
+const minEl = document.getElementById('min')
+const secEl = document.getElementById('sec')
+const timerEl = document.getElementById('timer')
+const signInEl = document.getElementById('sign-in')
+let _interval, _offline = true
+
+const tick = () => {
+  const delta = Date.now() - Number(localStorage.start)
+  minEl.textContent = String(Math.floor(delta / 60000)).padStart(2, '0')
+  secEl.textContent = String(Math.floor(delta / 1000) % 60).padStart(2, '0')
+}
+
+timerEl.addEventListener('click', (e) => {
+  localStorage.start = Date.now()
+  tick()
+  clearInterval(_interval)
+  _interval = setInterval(tick, 1000)
+})
+
+if (localStorage.start) {
+  timerEl.style.opacity = 0
+  setTimeout(() => timerEl.style.opacity = 1, 15)
+  _interval = setInterval(tick, 1000)
+  tick()
+}
+
+
+// DATABASE
+const fetchText = async url => (await fetch(url)).text()
+const loadScript = async urls => {
+  const files = await Promise.all(urls.map(fetchText))
+  const el = document.createElement('script')
+  el.innerHTML = files.join('\n')
+  document.head.appendChild(el)
+}
+
+const init = async () => {
+  await loadScript([
+    '/__/firebase/7.13.1/firebase-app.js',
+    '/__/firebase/7.13.1/firebase-auth.js',
+    '/__/firebase/7.13.1/firebase-database.js',
+    '/__/firebase/init.js',
+  ])
+  return firebase.app()
+}
+
+const auth = async () => {
+  const user = await getUser()
+  return user ? { user } : firebase.auth().getRedirectResult()
+    .catch(error => ({ error }))
+}
+
+const signIn = (e) => {
+  // Start a sign in process for an unauthenticated user.
+  const provider = new firebase.auth.GithubAuthProvider()
+  firebase.auth().signInWithRedirect(provider)
+}
+
+const getUser = () => new Promise((s) => {
+  firebase.auth().onAuthStateChanged(s)
+})
+
+init().catch(console.error).then(async app => {
+  if (!app) return
+  const { user, error } = await auth()
+  signInEl.style.opacity = 1
+  if (!user) {
+    error && console.dir(error)
+    signInEl.addEventListener('click', signIn)
+    return
+  }
+  _offline = false
+  signInEl.textContent = `${user.email} sign-out`
+  // todo, handle sign out
+  setTimeout(() => signInEl.style.opacity = '', 35000)
+})
+
+
+
+</script>
+</body>
+</html>
