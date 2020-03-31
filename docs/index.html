@@ -48,6 +48,8 @@ body, button {
 
 /* da colors */
 #sec { color: #aaa }
+#timer.overtime { color: red }
+
 @media (prefers-color-scheme: dark) {
   button, body {
     background: #111;
@@ -55,6 +57,8 @@ body, button {
   }
 
   #sec { color: #555 }
+  .overtime #sec { color: #521 }
+  #timer.overtime { color: #f53 }
 }
 </style>
 </head>
@@ -67,6 +71,7 @@ const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
 const timerEl = document.getElementById('timer')
 const signInEl = document.getElementById('sign-in')
+const S = 1000, M = 60*S, WORK_DURATION = 25*M, PAUSE_DURATION = 5*M
 let _timeout, _db, _work = false
 
 const save = async (now, prev) => {
@@ -84,13 +89,18 @@ const save = async (now, prev) => {
 }
 
 const update = () => {
+  const work = localStorage.work === 'work'
   const start = Number(localStorage.start)
   const now = Date.now()
   const delta = now - Number(localStorage.start)
-  timerEl.classList.toggle('work', localStorage.work === 'work')
-  minEl.textContent = String(Math.floor(delta / 60000)).padStart(2, '0')
-  secEl.textContent = String(Math.floor(delta / 1000) % 60).padStart(2, '0')
-  const next = (Math.floor((start + delta) / 1000) + 1)*1000
+  const dur = work ? WORK_DURATION : PAUSE_DURATION
+  const diff = dur - delta
+  const left = delta > dur ? (-diff) + S : diff
+  timerEl.classList.toggle('overtime', delta > dur)
+  timerEl.classList.toggle('work', work)
+  minEl.textContent = String(Math.floor(left / M)).padStart(2, '0')
+  secEl.textContent = String(Math.floor(left / S) % 60).padStart(2, '0')
+  const next = (Math.floor((start + delta) / S) + 1)*S
   clearTimeout(_timeout)
   _timeout = setTimeout(update, next - now)
 }
