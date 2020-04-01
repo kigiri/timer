@@ -187,6 +187,33 @@ const play = (() => {
 // create dom element
 const el = (tag = 'div', props = {}) => Object.assign(document.createElement(tag), props)
 
+// fix local time
+const getTime = (() => {
+  let offset = Number(localStorage.timeOffset) || 0
+  let precision = Number(localStorage.timePrecision) || Infinity
+  let iteration = 0
+  const calcDiff = async () => {
+    if (++iteration > 5) return
+    const req = new XMLHttpRequest()
+    const begin = Date.now()
+
+    req.open('GET', `https://worldtimeapi.org/api/timezone/Europe/London`)
+    let next
+    req.onreadystatechange = () => next && next(req.readyState)
+    req.send()
+    while (await new Promise(s => next = s) < 2) {} // headers recieved
+    const end = Date.now()
+    const p = (end - begin) / 2
+    if (p >= precision) return
+    while (await new Promise(s => next = s) < 4) {} // done
+    localStorage.timePrecision = precision = p
+    localStorage.timeOffset = offset = JSON.parse(req.responseText).unixtime * 1000 + p - end
+    console.log('update local time offset:', offset, 'precision', precision)
+  }
+  calcDiff()
+  setInterval(calcDiff, 5000)
+  return () => offset + Date.now()
+})()
 
 const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
 const favEl = document.getElementById('fav')
@@ -243,7 +270,7 @@ const update = () => {
   const work = localStorage.work === 'work'
   const wasWork = timerEl.classList.contains('work')
   const start = Number(localStorage.start)
-  const now = Date.now()
+  const now = getTime()
   const delta = now - Number(localStorage.start)
   const dur = work ? WORK_DURATION : PAUSE_DURATION
   const diff = dur - delta
@@ -271,7 +298,7 @@ const update = () => {
 const toggleWork = work => localStorage.work = work ? 'work' : ''
 
 timerEl.addEventListener('click', (e) => {
-  const now = Date.now()
+  const now = getTime()
   toggleWork(localStorage.work !== 'work')
   
   save(now, Number(localStorage.start))
@@ -367,7 +394,7 @@ const init = async app => {
   last && apply(last)
   lastTimers.on('child_added', apply)
 
-  timers.child(Date.now().toString(36))
+  timers.child(getTime().toString(36))
   _db = { timers }
 }
 
