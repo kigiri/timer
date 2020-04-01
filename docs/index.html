@@ -93,6 +93,7 @@ body, button {
 #bell {
   position: fixed;
   z-index: 1;
+  outline: none;
 }
 #bell:not(.off) #sound-off { display: none }
 #bell.off #sound-on { display: none }
@@ -103,10 +104,9 @@ body, button {
 
 @media (prefers-color-scheme: dark) {
   button, body {
-    background: #111;
+    background: #000;
     color: #eee;
   }
-
   #sec, #message:before, #bell:not(.off) { color: #555 }
   .overtime #sec { color: #521 }
   #timer.overtime:not(.out-of-range), #bell.off { color: #f53 }
