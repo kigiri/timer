@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nice Timer</title>
+  <link id="fav" rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;,">
+  <title id="title">Work</title>
 <style>
 /* font */
 @font-face {
@@ -43,6 +44,7 @@ img { max-width: 100%; height: auto }
 body, button {
   cursor: pointer;
   font-family: monospace;
+  border: none;
 }
 
 #timer.work { font-size: 30vw }
@@ -62,6 +64,18 @@ body, button {
   transition: opacity 250ms;
 }
 
+.out-of-range #min, .out-of-range #sec { display: none }
+#message:before { display: block }
+#message:before { content: 'Pause session ended' }
+.work #message:before { content: 'Work session ended' }
+
+#message {
+  font-family: monospace;
+  display: none;
+  font-size: 6vw;
+  text-align: center;
+}
+.out-of-range #message { display: initial }
 
 #min { font-weight: 500 }
 #sign-in:hover { opacity: 1 }
@@ -76,9 +90,16 @@ body, button {
   transition: opacity 750ms;
 }
 
+#bell {
+  position: fixed;
+  z-index: 1;
+}
+#bell:not(.off) #sound-off { display: none }
+#bell.off #sound-on { display: none }
+
 /* da colors */
-#sec { color: #aaa }
-#timer.overtime { color: red }
+#sec, #message:before, #bell:not(.off) { color: #aaa }
+#timer.overtime:not(.out-of-range), #bell.off { color: red }
 
 @media (prefers-color-scheme: dark) {
   button, body {
@@ -86,21 +107,91 @@ body, button {
     color: #eee;
   }
 
-  #sec { color: #555 }
+  #sec, #message:before, #bell:not(.off) { color: #555 }
   .overtime #sec { color: #521 }
-  #timer.overtime { color: #f53 }
+  #timer.overtime:not(.out-of-range), #bell.off { color: #f53 }
 }
 </style>
 </head>
 <body>
 <button id="sign-in" disabled>sign-in</button>
-<div id="timer" class="work"><div id="min">00</div><div id="sec">00</div></div>
+<button id="bell" class="off">
+  <svg id="sound-off" fill="currentColor" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40" style="vertical-align:middle"><path d="m30 24.5l-14.9-15.7c0.4-0.2 0.8-0.4 1.2-0.6h0l0.5-0.2c0.2-0.1 0.5-0.1 0.7-0.2v-1.2c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5v1.2c4.8 1.2 7.5 5.4 7.5 10.6v6.1z m-10 12.1c-1.9 0-3.4-1.4-3.4-3.2h6.8c0 1.8-1.5 3.2-3.4 3.2z m-7-26.4c7.4 7.6 14.7 15.1 22 22.7l-2.1 2.1-3.4-3.4h-22.9v-1.6l3.4-3.4v-8.3c0-2.1 0.5-4.1 1.3-5.7l-4.7-4.6 2.2-2.2z"></path></svg>
+  <svg id="sound-on" fill="currentColor" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40" style="vertical-align:middle"><path d="m30 26.6l3.4 3.4v1.6h-26.8v-1.6l3.4-3.4v-8.2c0-5.2 2.7-9.4 7.5-10.6v-1.2c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5v1.2c4.8 1.2 7.5 5.5 7.5 10.6v8.2z m-10 10c-1.9 0-3.4-1.4-3.4-3.2h6.8c0 1.8-1.6 3.2-3.4 3.2z"></path></svg>
+</button>
+<div id="timer" class="work">
+  <div id="message"></div>
+  <div id="min">00</div><div id="sec">00</div>
+</div>
 <script>
 'use strict'
+// get relative time as text
+const relatime = ((l,r,f=([u,s],d)=>r.format(~~(d/s),u))=>d=>f(l.find(([u,s])=>Math.abs(d)>s||u[0]=='s'),d))(Object.entries({year:31536e6,month:2628e6,day:864e5,hour:36e5,minute:6e4,second:1e3}),new Intl.RelativeTimeFormat('en',{style:'narrow'}))
+
+// play notes
+const play = (() => {
+  const signs = ['A','AS', 'B', 'C', 'CS', 'D', 'DS', 'E', 'F', 'FS', 'G', 'GS']
+  // DF CS
+  // EF DS
+  // GF FS
+  // AF GS
+  // BF AS
+  const tempo = 100
+  const durations = {
+    B: 128, // BREVE
+    W: 64, // WHOLE
+    H: 32, // HALF
+    Q: 16, // QUARTER
+    E: 8, // EIGHTH
+    S: 4, // SIXTEENTH
+    BD: 128+64, // BREVE DOT
+    WD: 64+32, // WHOLE DOT
+    HD: 32+16, // HALF DOT
+    QD: 16+8, // QUARTER DOT
+    ED: 8+4, // EIGHTH DOT
+    SD: 4+2, // SIXTEENTH DOT
+  }
+
+  const context = new AudioContext()
+  const types = ['sine', 'square', 'sawtooth', 'triangle']
+  const notes = Object.fromEntries(signs.slice(0,8)
+    .flatMap((_,o)=>signs.map((s,n)=>[s+(o+1),55*2**((12*o + n)/12)])))
+  const noOp = () => {}
+  const sound = (frequency, type = 'sine') => {
+    const o = context.createOscillator()
+    const g = context.createGain()
+    o.type = type
+    o.frequency.value = frequency
+    o.connect(g)
+    g.connect(context.destination)
+    o.start(0)
+    return g
+  }
+
+  const chainNote = (next, noteStr) => () => {
+    const [ note, rest = '' ] = noteStr.split('.')
+    const duration = durations[rest.slice(0, -1)] / tempo
+    const g = sound(notes[note], types[rest[rest.length - 1]])
+    g.gain.exponentialRampToValueAtTime(1e-9, context.currentTime + duration)
+    setTimeout(next, duration*1000)
+  }
+  const p = melody => melody.split('+').reduceRight(chainNote, noOp)()
+  p.sound = sound
+  return p
+})()
+
+// create dom element
+const el = (tag = 'div', props = {}) => Object.assign(document.createElement(tag), props)
+
+const favEl = document.getElementById('fav')
 const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
+const bellEl = document.getElementById('bell')
 const timerEl = document.getElementById('timer')
+const titleEl = document.getElementById('title')
 const signInEl = document.getElementById('sign-in')
+const messageEl = document.getElementById('message')
+
 const S = 1000, M = 60*S, WORK_DURATION = 25*M, PAUSE_DURATION = 5*M
 let _timeout, _db, _work = false
 
@@ -118,21 +209,57 @@ const save = async (now, prev) => {
     .set({ ts: now, work: localStorage.work === 'work' })
 }
 
+const setFav = (canvasEl => {
+  const ctx = canvasEl.getContext('2d')
+  ctx.font = '84px "IBM Plex Mono"'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  favEl.type = 'image/png'
+
+  return (text, color = '#000') => {
+    ctx.clearRect(0, 0, 96, 96)
+    ctx.fillStyle = color
+    ctx.fillText(text, 48, 48)
+    favEl.href = canvasEl.toDataURL('image/png')
+  }
+})(el('canvas', { width: '96', height: '96' }))
+
+setFav('00', 'white')
+
+// todo: move setTimeout to worker
+const timings = [...Array(10).keys()].map(n => n ** 2 * M)
 const update = () => {
+  // async loop
+  Promise.resolve(clearTimeout(_timeout)).finally(() => {
+    _timeout = setTimeout(update, (Math.floor((start + delta) / S) + 1) * S - now)
+  })
+
   const work = localStorage.work === 'work'
+  const wasWork = timerEl.classList.contains('work')
   const start = Number(localStorage.start)
   const now = Date.now()
   const delta = now - Number(localStorage.start)
   const dur = work ? WORK_DURATION : PAUSE_DURATION
   const diff = dur - delta
-  const left = delta > dur ? (-diff) + S : diff
-  timerEl.classList.toggle('overtime', delta > dur)
+  const overtime = delta > dur
+  const left = overtime ? -diff : diff + S
+  const min = Math.floor(left / M)
+  const outOfRange = overtime && min > 10
+
   timerEl.classList.toggle('work', work)
-  minEl.textContent = String(Math.floor(left / M)).padStart(2, '0')
+  timerEl.classList.toggle('overtime', overtime)
+  timerEl.classList.toggle('out-of-range', outOfRange)
+
+  if (outOfRange) return messageEl.textContent = relatime(diff)
+  overtime && timings.find(t => left > t && left < t + S) && play('CS6.ED+A7.BD')
+  if (min != minEl.textContent) {
+    const color = overtime ? 'red' : 'white'
+    setFav(minEl.textContent = String(min).padStart(2, '0'), color)
+  }
+  if (wasWork !== work) {
+    titleEl.textContent = work ? 'Work' : 'Pause'
+  }
   secEl.textContent = String(Math.floor(left / S) % 60).padStart(2, '0')
-  const next = (Math.floor((start + delta) / S) + 1)*S
-  clearTimeout(_timeout)
-  _timeout = setTimeout(update, next - now)
 }
 
 const toggleWork = work => localStorage.work = work ? 'work' : ''
@@ -140,6 +267,7 @@ const toggleWork = work => localStorage.work = work ? 'work' : ''
 timerEl.addEventListener('click', (e) => {
   const now = Date.now()
   toggleWork(localStorage.work !== 'work')
+  
   save(now, Number(localStorage.start))
   localStorage.start = now
   update()
@@ -151,14 +279,22 @@ if (localStorage.start) {
   update()
 }
 
+// BELL
+bellEl.addEventListener('click', () => {
+  const off = !bellEl.classList.contains('off')
+  bellEl.classList.toggle('off', off)
+  if (off) return
+  play('A7.ED+B7.ED+CS7.BD')
+  // if mobile:
+  play.sound(8e4) // play an unplayable sound to prevent sleep (to test)
+})
+
 
 // DATABASE
 const fetchText = async url => (await fetch(url)).text()
 const loadScript = async urls => {
   const files = await Promise.all(urls.map(fetchText))
-  const el = document.createElement('script')
-  el.innerHTML = files.join('\n')
-  document.head.appendChild(el)
+  document.head.appendChild(el('script', { innerHTML: files.join('\n') }))
 }
 
 const load = async () => {
@@ -212,9 +348,6 @@ const init = async app => {
   const timers = db.ref(user.uid)
   const lastTimers = timers.orderByChild('ts').limitToLast(1)
 
-
-  lastTimers.on('child_added', snap => {
-    const { ts, work, ...rest } = snap.val()
   const apply = snap => {
     if (!snap || !snap.val) return
     const { ts, work } = snap.val()
