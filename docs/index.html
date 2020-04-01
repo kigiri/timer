@@ -130,6 +130,7 @@ const relatime = ((l,r,f=([u,s],d)=>r.format(~~(d/s),u))=>d=>f(l.find(([u,s])=>M
 
 // play notes
 const play = (() => {
+  let muted = true
   const signs = ['A','AS', 'B', 'C', 'CS', 'D', 'DS', 'E', 'F', 'FS', 'G', 'GS']
   // DF CS
   // EF DS
@@ -164,11 +165,12 @@ const play = (() => {
     o.frequency.value = frequency
     o.connect(g)
     g.connect(context.destination)
-    o.start(0)
+    muted || o.start(0)
     return g
   }
 
   const chainNote = (next, noteStr) => () => {
+    if (muted) return
     const [ note, rest = '' ] = noteStr.split('.')
     const duration = durations[rest.slice(0, -1)] / tempo
     const g = sound(notes[note], types[rest[rest.length - 1]])
@@ -177,12 +179,16 @@ const play = (() => {
   }
   const p = melody => melody.split('+').reduceRight(chainNote, noOp)()
   p.sound = sound
+  p.mute = () => muted = true
+  p.unmute = () => muted = false
   return p
 })()
 
 // create dom element
 const el = (tag = 'div', props = {}) => Object.assign(document.createElement(tag), props)
 
+
+const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
 const favEl = document.getElementById('fav')
 const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
@@ -283,10 +289,10 @@ if (localStorage.start) {
 bellEl.addEventListener('click', () => {
   const off = !bellEl.classList.contains('off')
   bellEl.classList.toggle('off', off)
-  if (off) return
-  play('A7.ED+B7.ED+CS7.BD')
-  // if mobile:
-  play.sound(8e4) // play an unplayable sound to prevent sleep (to test)
+  if (off) return play.mute()
+  play.unmute()
+  setTimeout(() => play('A7.ED+B7.ED+CS7.BD'), 150)
+  mobile && play.sound(-22049) // play an unplayable sound to prevent sleep (to test)
 })
 
 
