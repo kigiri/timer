@@ -261,7 +261,7 @@ const setFav = (canvasEl => {
 })(el('canvas', { width: '96', height: '96' }))
 setFav('00')
 
-const timings = [...Array(10).keys()].map(n => n ** 2 * M)
+const timings = [...Array(10).keys()].map(n => n ** 2 * M + 1)
 const update = () => {
   // async loop
   Promise.resolve(clearTimeout(_timeout)).finally(() => {
@@ -285,7 +285,7 @@ const update = () => {
   timerEl.classList.toggle('out-of-range', outOfRange)
 
   if (outOfRange) return messageEl.textContent = relatime(diff)
-  overtime && timings.find(t => left > t && left < t + S) && play('CS6.ED+A7.BD')
+  overtime && timings.find(t => left > t && left < t + dur + S) && play('CS6.ED+A7.BD')
   const color = overtime ? (dark ? '#f53' : 'red') : ''
   mobile || setFav(minEl.textContent = String(min).padStart(2, '0'), color)
   if (wasWork !== work) {
