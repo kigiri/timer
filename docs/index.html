@@ -216,6 +216,8 @@ const getTime = (() => {
 })()
 
 const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
+const dark = matchMedia('(prefers-color-scheme: dark)').matches
+
 const favEl = document.getElementById('fav')
 const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
@@ -244,22 +246,21 @@ const save = async (now, prev) => {
 
 const setFav = (canvasEl => {
   const ctx = canvasEl.getContext('2d')
+  const defaultColor = dark ? '#fff' : '#000'
   ctx.font = '84px "IBM Plex Mono"'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   favEl.type = 'image/png'
 
-  return (text, color = '#000') => {
+  return (text, color) => {
     ctx.clearRect(0, 0, 96, 96)
-    ctx.fillStyle = color
+    ctx.fillStyle = color || defaultColor
     ctx.fillText(text, 48, 48)
     favEl.href = canvasEl.toDataURL('image/png')
   }
 })(el('canvas', { width: '96', height: '96' }))
+setFav('00')
 
-setFav('00', 'white')
-
-// todo: move setTimeout to worker
 const timings = [...Array(10).keys()].map(n => n ** 2 * M)
 const update = () => {
   // async loop
@@ -275,9 +276,9 @@ const update = () => {
   const dur = work ? WORK_DURATION : PAUSE_DURATION
   const diff = dur - delta
   const overtime = delta > dur
-  const left = overtime ? -diff : diff + S
+  const left = overtime ? delta : diff + S
   const min = Math.floor(left / M)
-  const outOfRange = overtime && min > 10
+  const outOfRange = overtime && min > 99
 
   timerEl.classList.toggle('work', work)
   timerEl.classList.toggle('overtime', overtime)
@@ -285,10 +286,8 @@ const update = () => {
 
   if (outOfRange) return messageEl.textContent = relatime(diff)
   overtime && timings.find(t => left > t && left < t + S) && play('CS6.ED+A7.BD')
-  if (min != minEl.textContent) {
-    const color = overtime ? 'red' : 'white'
-    setFav(minEl.textContent = String(min).padStart(2, '0'), color)
-  }
+  const color = overtime ? (dark ? '#f53' : 'red') : ''
+  mobile || setFav(minEl.textContent = String(min).padStart(2, '0'), color)
   if (wasWork !== work) {
     titleEl.textContent = work ? 'Work' : 'Pause'
   }
