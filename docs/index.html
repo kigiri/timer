@@ -134,7 +134,7 @@ const relatime = ((l,r,f=([u,s],d)=>r.format(~~(d/s),u))=>d=>f(l.find(([u,s])=>M
 
 // play notes
 const play = (() => {
-  let muted = true
+  let _muted = true, _silentSound
   const signs = ['A','AS', 'B', 'C', 'CS', 'D', 'DS', 'E', 'F', 'FS', 'G', 'GS']
   // DF CS
   // EF DS
@@ -169,12 +169,12 @@ const play = (() => {
     o.frequency.value = frequency
     o.connect(g)
     g.connect(context.destination)
-    muted || o.start(0)
+    _muted || o.start(0)
     return g
   }
 
   const chainNote = (next, noteStr) => () => {
-    if (muted) return
+    if (_muted) return
     const [ note, rest = '' ] = noteStr.split('.')
     const duration = durations[rest.slice(0, -1)] / tempo
     const g = sound(notes[note], types[rest[rest.length - 1]])
@@ -183,8 +183,11 @@ const play = (() => {
   }
   const p = melody => melody.split('+').reduceRight(chainNote, noOp)()
   p.sound = sound
-  p.mute = () => muted = true
-  p.unmute = () => muted = false
+  p.mute = () => _muted = true
+  p.unmute = () => _muted = false
+  p.keepAlive = off => off
+    ? (_silentSound && (_silentSound.disconnect(), _silentSound = undefined))
+    : (_silentSound || (_silentSound = play.sound(-22049)))
   return p
 })()
 
@@ -333,16 +336,16 @@ bellEl.addEventListener('click', () => {
   if (off) return play.mute()
   play.unmute()
   setTimeout(() => play('A7.ED+B7.ED+CS7.BD'), 150)
-  mobile && play.sound(-22049) // play an unplayable sound to prevent sleep (to test)
 })
 
 // FULLSCREEN
 fullscreenEl.addEventListener('click', () => {
   const off = document.fullscreenElement === document.documentElement
   fullscreenEl.classList.toggle('off', off)
-  off
-    ? document.exitFullscreen()
-    : document.documentElement.requestFullscreen()
+  mobile && play.keepAlive(!off)
+  if (off) return document.exitFullscreen()
+  document.documentElement.requestFullscreen()
+})
 
 // DATABASE
 const fetchText = async url => (await fetch(url)).text()
