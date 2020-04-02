@@ -83,6 +83,18 @@ body, button {
 #fullscreen:not(.off) #fullscreen-off,
 #fullscreen.off #fullscreen-on { display: none }
 
+#icon {
+  z-index: 1000;
+  position: fixed;
+  font-size: 15vw;
+  height: 15vh;
+  width: 100vw;
+  text-align: center;
+  vertical-align: text-bottom;
+  bottom: 2vh;
+  user-select: none;
+}
+
 /* light theme */
 body,
 button,
@@ -123,6 +135,7 @@ button,
     <svg id="fullscreen-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40" style="vertical-align:middle;fill:#666"><path d="m26.6 13.4h5v3.2h-8.2v-8.2h3.2v5z m-3.2 18.2v-8.2h8.2v3.2h-5v5h-3.2z m-10-18.2v-5h3.2v8.2h-8.2v-3.2h5z m-5 13.2v-3.2h8.2v8.2h-3.2v-5h-5z"></path></svg>
   </button>
 </div>
+<div id="icon"></div>
 <div id="timer" class="work">
   <div id="message"></div>
   <div id="min">00</div><div id="sec">00</div>
@@ -222,9 +235,38 @@ const getTime = (() => {
   return () => offset + Date.now()
 })()
 
+const fromJSON = v => {try{return JSON.parse(v)}catch(err){}}
+const toJSON = v => {try{return JSON.stringify(v)}catch(err){}}
+const store = defaults => {
+  const _set = {}
+  const _get = {}
+  for (const [k,v] of Object.entries(defaults)) {
+    switch (typeof v) {
+      case 'boolean': _get[k] = Boolean(localStorage[k])||v; _set[k] = x => localStorage[k] = (_get[k] = Boolean(x)) || ''; break
+      case 'number': _get[k] = Number(localStorage[k])||v; _set[k] = x => localStorage[k] = _get[k] = Number(x); break
+      case 'string': _get[k] = localStorage[k]||v;_set[k] = x => localStorage[k] = (_get[k] = String(x == null ? '' : x)); break
+      default: _get[k] = fromJSON(localStorage[k])||v; _set[k] = x => localStorage[k] = toJSON(_get[k] = x); break;
+    }
+  }
+  return {_get, _set}
+}
+
+
+const getState = () => timerEl.classList.contains('work') ? 'work' : 'pause'
+
+const { _set, _get } = store({
+  theme: 'system',
+  state: 'work',
+  start: 0,
+  stack: [],
+  pause: '',
+  work: '',
+})
+
 const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
+const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches
 const dark = matchMedia('(prefers-color-scheme: dark)').matches
-if (localStorage.theme === 'dark' || localStorage.theme ==! 'light' || dark) {
+if (_get.theme === 'dark' || _get.theme ==! 'light' || dark) {
   document.documentElement.classList.add('dark')
 }
 
@@ -232,98 +274,116 @@ const favEl = document.getElementById('fav')
 const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
 const bellEl = document.getElementById('bell')
+const iconEl = document.getElementById('icon')
 const timerEl = document.getElementById('timer')
 const titleEl = document.getElementById('title')
 const signInEl = document.getElementById('sign-in')
 const messageEl = document.getElementById('message')
 const fullscreenEl = document.getElementById('fullscreen')
 
-const S = 1000, M = 60*S, WORK_DURATION = 25*M, PAUSE_DURATION = 5*M
-let _timeout, _db, _work = false
+const S = 1000, M = 60*S
 
-const save = async (now, prev) => {
+const durations = { work: 25*M, pause: 5*M }
+const icons = {
+  pause: ['','pause','🎮','🎬','📚','🛀','🧹','📞','🧘','👶','🌻','🌸','💗','🍫','☕','🍨','🤸','💪','🍻','🍉','💤','🚬','💩','🛒'],
+  work: ['','work','👩‍💻','👨‍💻','👷','👩‍💼','👩‍🚀','👨‍🚀','👩‍⚕️','👨‍⚕️','👩‍🔧','👨‍🎨','👩‍🎨','💼','🧰','🛠','⚒️','🚧','🎓','👔','🥼','🚜','💻','✍','🏭'],
+}
+
+const iconIdx = {
+  pause: Math.max(icons.pause.indexOf(_get.pause), 0),
+  work: Math.max(icons.work.indexOf(_get.work), 0),
+}
+
+const updateIcon = (key, icon) => {
+  icon ? _set[key](icon) : (icon = _get[key])
+  iconEl.textContent = icon
+  iconIdx[key] = Math.max(icons[key].indexOf(_get[key]), 0)
+}
+
+iconEl.addEventListener('click', (e) => {
+  const i = icons[_get.state]
+  const next = (Math.max(i.indexOf(_get[_get.state]), 0) + 1) % i.length
+  updateIcon(_get.state, i[next])
+})
+
+updateIcon(_get.state)
+
+let _db
+const save = async (now, prev = 0) => {
+  const { state } = _get
+  const data = { ts: now, prev: 0, state, icon: _get[state] }
   if (!_db) {
-    const w = Number(localStorage.work === 'work')
-    localStorage.stack = `${(localStorage.stack || '')}${now},${prev||0},${w}\n`
-    console.log('offline update', localStorage.stack)
+    _set.stack([..._get.stack, data])
+    console.log('offline update', _get.stack)
     return
   }
 
-  // get prev, update duration
-  await _db.timers
-    .child(now.toString(36))
-    .set({ ts: now, work: localStorage.work === 'work' })
+  // todo: get prev, update duration
+  await _db.timers.child(now.toString(36)).set(data)
 }
 
-const getColor = (work, overtime) => {
+const getColor = overtime => {
   if (overtime) return dark ? '#f53' : '#c31'
-  if (work) return dark ? '#fff' : '#000'
+  if (_get.state === 'work') return dark ? '#fff' : '#000'
   return dark ? '#5bf' : '#04b'
 }
 const setFav = (canvasEl => {
   const ctx = canvasEl.getContext('2d')
-  const defaultColor = getColor(true)
   ctx.font = '84px "IBM Plex Mono"'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   favEl.type = 'image/png'
 
-  return (text, color) => {
+  return (text, overtime) => {
     ctx.clearRect(0, 0, 96, 96)
-    ctx.fillStyle = color || defaultColor
+    ctx.fillStyle = getColor(overtime)
     ctx.fillText(text, 48, 48)
     favEl.href = canvasEl.toDataURL('image/png')
   }
 })(el('canvas', { width: '96', height: '96' }))
 setFav('00')
 
-
 const timings = [...Array(10).keys()].map(n => n ** 2 * M + 1)
+let _timeout
 const update = () => {
   // async loop
   Promise.resolve(clearTimeout(_timeout)).finally(() => {
     _timeout = setTimeout(update, (Math.floor((start + delta) / S) + 1) * S - now)
   })
 
-  const work = localStorage.work === 'work'
-  const wasWork = timerEl.classList.contains('work')
-  const start = Number(localStorage.start)
+  const { state, start } = _get
   const now = getTime()
-  const delta = now - Number(localStorage.start)
-  const dur = work ? WORK_DURATION : PAUSE_DURATION
+  const delta = now - start
+  const dur = durations[state]
   const diff = dur - delta
   const overtime = delta > dur
   const left = overtime ? delta : diff + S
   const min = Math.floor(left / M)
+  const sec = Math.floor(left / S) % 60
   const outOfRange = overtime && min > 99
 
-  timerEl.classList.toggle('work', work)
-  timerEl.classList.toggle('pause', !work)
+  timerEl.classList.toggle('work', state === 'work')
+  timerEl.classList.toggle('pause', state === 'pause')
   timerEl.classList.toggle('overtime', overtime)
   timerEl.classList.toggle('out-of-range', outOfRange)
 
   if (outOfRange) return messageEl.textContent = relatime(diff)
   overtime && timings.find(t => -diff > t && -diff < t + S) && play('CS6.ED+A7.BD')
-  const color = getColor(work, overtime)
-  mobile || setFav(minEl.textContent = String(min).padStart(2, '0'), color)
-  if (wasWork !== work) {
-    titleEl.textContent = work ? 'Work' : 'Pause'
-  }
-  secEl.textContent = String(Math.floor(left / S) % 60).padStart(2, '0')
+  mobile || setFav(minEl.textContent = String(min).padStart(2, '0'), overtime)
+  updateIcon(state)
+  titleEl.textContent = `${state[0].toUpperCase()}${state.slice(1)}`
+  secEl.textContent = String(sec).padStart(2, '0')
 }
-
-const toggleWork = work => localStorage.work = work ? 'work' : ''
 
 timerEl.addEventListener('click', (e) => {
   const now = getTime()
-  toggleWork(localStorage.work !== 'work')
-  
-  save(now, Number(localStorage.start))
-  localStorage.start = now
+  _set.state(_get.state === 'work' ? 'pause' : 'work')
+  save(now, _get.start)
+  _set.start(now)
   update()
 })
 
-if (localStorage.start) {
+if (_get.start) {
   timerEl.style.opacity = 0
   setTimeout(() => timerEl.style.opacity = 1, 15)
   update()
@@ -397,7 +457,7 @@ const init = async app => {
     signInEl.onclick = signIn
     return
   }
-  _db = false
+  _db = undefined
   signInEl.textContent = `${user.email} sign-out`
   // todo, handle sign out
   setTimeout(() => signInEl.style.opacity = '', 35000)
@@ -407,10 +467,10 @@ const init = async app => {
 
   const apply = snap => {
     if (!snap || !snap.val) return
-    const { ts, work } = snap.val()
-    if (ts < Number(localStorage.start)) return
-    localStorage.start = ts
-    toggleWork(work)
+    const { ts, state } = snap.val()
+    if (ts < _get.start) return
+    _set.start(ts)
+    _set.state(state)
     update()
   }
 
