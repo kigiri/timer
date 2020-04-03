@@ -33,8 +33,12 @@ body, button {
   cursor: pointer;
   font-family: monospace;
   border: none;
+  background: transparent;
 }
 
+.lock * { opacity: 0 }
+.lock #welcome { opacity: 1 }
+#min { font-weight: 500 }
 #timer {
   font-family: 'IBM Plex Mono';
   font-size: 30vw;
@@ -50,44 +54,24 @@ body, button {
   transition: opacity 250ms;
 }
 
-.out-of-range #min, .out-of-range #sec { display: none }
 #message:before { display: block }
 #message:before { content: 'Pause session ended' }
 .work #message:before { content: 'Work session ended' }
-
+.out-of-range #message { display: initial }
 #message {
   font-family: monospace;
   display: none;
   font-size: 6vw;
   text-align: center;
 }
-.out-of-range #message { display: initial }
-
-#min { font-weight: 500 }
-#sign-in:hover { opacity: 1 }
-#sign-in {
-  opacity: 0;
-  transition: opacity 750ms;
-  position: fixed;
-  border: 0;
-  bottom: 0;
-  right: 0;
-  z-index: 1;
-  transition: opacity 750ms;
-}
 
 #toolbar { position: fixed; z-index: 1; display: flex }
-#bell, #fullscreen { outline: none; fill: currentColor }
-#bell:not(.off) #sound-off,
-#bell.off #sound-on,
-#fullscreen:not(.off) #fullscreen-off,
-#fullscreen.off #fullscreen-on { display: none }
-
+#toolbar button { outline: none; fill: currentColor }
 #icon {
   z-index: 1000;
   position: fixed;
-  font-size: 15vw;
-  height: 15vh;
+  font-size: 15vh;
+  height: 18vh;
   width: 100vw;
   text-align: center;
   vertical-align: text-bottom;
@@ -95,11 +79,29 @@ body, button {
   user-select: none;
 }
 
+/* visibility logic */
+html.dark #theme-light,
+html:not(.dark) #theme-dark,
+body:not(.lock) #welcome,
+.out-of-range #min,
+.out-of-range #sec,
+#sign-in:not(.retry) #sign-in-retry,
+#sign-in:not(.off) #sign-in-off,
+#sign-in.off #sign-in-on,
+#sign-in.retry #sign-in-on,
+#bell:not(.off) #sound-off,
+#bell.off #sound-on,
+#install.installed,
+#fullscreen:not(.off) #fullscreen-off,
+#fullscreen.off #fullscreen-on { display: none }
+
 /* light theme */
-body,
-button,
-#timer { background: #fff; color: #222 }
+body, button, #timer { color: #222 }
+body, #timer { background: #fff }
 #sec,
+#sign-in[disabled],
+#sign-in-on,
+#theme,
 #message:before,
 #bell:not(.off) { color: #888 }
 .pause #min { color: #04b }
@@ -111,8 +113,13 @@ button,
 /* dark theme */
 .dark body,
 .dark button,
-.dark #timer { background: #000; color: #eee }
+.dark #timer { color: #eee }
+.dark body,
+.dark #timer { background: #000 }
 .dark #sec,
+.dark #sign-in[disabled],
+.dark #sign-in-on,
+.dark #theme,
 .dark #message:before,
 .dark #bell:not(.off),
 .dark #fullscreen { color: #666 }
@@ -123,18 +130,30 @@ button,
 .dark #bell.off { color: #f53 }
 </style>
 </head>
-<body>
-<button id="sign-in" disabled>sign-in</button>
+<body class="lock">
 <div id="toolbar">
-  <button id="bell" class="off">
+  <button id="sign-in" disabled class="off">
+    <svg id="sign-in-retry" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m20 8.4c7.3 0 13.4 5.9 13.4 13.2s-6.1 13.4-13.4 13.4-13.4-6-13.4-13.4h3.4c0 5.6 4.5 10 10 10s10-4.4 10-10-4.5-10-10-10v6.8l-8.4-8.4 8.4-8.4v6.8z"></path></svg>
+    <svg id="sign-in-off" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m20 0c-11 0-20 9-20 20 0 8.8 5.7 16.3 13.7 19 1 0.2 1.3-0.5 1.3-1 0-0.5 0-2 0-3.7-5.5 1.2-6.7-2.4-6.7-2.4-0.9-2.3-2.2-2.9-2.2-2.9-1.9-1.2 0.1-1.2 0.1-1.2 2 0.1 3.1 2.1 3.1 2.1 1.7 3 4.6 2.1 5.8 1.6 0.2-1.3 0.7-2.2 1.3-2.7-4.5-0.5-9.2-2.2-9.2-9.8 0-2.2 0.8-4 2.1-5.4-0.2-0.5-0.9-2.6 0.2-5.3 0 0 1.7-0.5 5.5 2 1.6-0.4 3.3-0.6 5-0.6 1.7 0 3.4 0.2 5 0.7 3.8-2.6 5.5-2.1 5.5-2.1 1.1 2.8 0.4 4.8 0.2 5.3 1.3 1.4 2.1 3.2 2.1 5.4 0 7.6-4.7 9.3-9.2 9.8 0.7 0.6 1.4 1.9 1.4 3.7 0 2.7 0 4.9 0 5.5 0 0.6 0.3 1.2 1.3 1 8-2.7 13.7-10.2 13.7-19 0-11-9-20-20-20z"></path></svg>
+    <svg id="sign-in-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m29.7 8.6q5.3 4.5 5.3 11.4 0 6.3-4.4 10.6t-10.6 4.4-10.6-4.4-4.4-10.6q0-6.9 5.3-11.4l2.4 2.3q-4.3 3.6-4.3 9.1 0 4.8 3.4 8.2t8.2 3.4 8.2-3.4 3.4-8.2q0-5.5-4.3-9z m-8.1-3.6v16.6h-3.2v-16.6h3.2z"></path></svg>
+  </button>
+  <button id="bell">
     <svg id="sound-off" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m30 24.5l-14.9-15.7c0.4-0.2 0.8-0.4 1.2-0.6h0l0.5-0.2c0.2-0.1 0.5-0.1 0.7-0.2v-1.2c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5v1.2c4.8 1.2 7.5 5.4 7.5 10.6v6.1z m-10 12.1c-1.9 0-3.4-1.4-3.4-3.2h6.8c0 1.8-1.5 3.2-3.4 3.2z m-7-26.4c7.4 7.6 14.7 15.1 22 22.7l-2.1 2.1-3.4-3.4h-22.9v-1.6l3.4-3.4v-8.3c0-2.1 0.5-4.1 1.3-5.7l-4.7-4.6 2.2-2.2z"></path></svg>
     <svg id="sound-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m30 26.6l3.4 3.4v1.6h-26.8v-1.6l3.4-3.4v-8.2c0-5.2 2.7-9.4 7.5-10.6v-1.2c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5v1.2c4.8 1.2 7.5 5.5 7.5 10.6v8.2z m-10 10c-1.9 0-3.4-1.4-3.4-3.2h6.8c0 1.8-1.6 3.2-3.4 3.2z"></path></svg>
   </button>
+  <button id="theme">
+    <svg id="theme-light" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m20 30q4.1 0 7.1-2.9t2.9-7.1-2.9-7.1-7.1-2.9-7.1 2.9-2.9 7.1 2.9 7.1 7.1 2.9z m13.4-4.5v7.9h-7.9l-5.5 5.4-5.5-5.4h-7.9v-7.9l-5.4-5.5 5.4-5.5v-7.9h7.9l5.5-5.4 5.5 5.4h7.9v7.9l5.4 5.5z"></path></svg>
+    <svg id="theme-dark" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m16.6 3.4c9.3 0 16.8 7.4 16.8 16.6s-7.5 16.6-16.8 16.6c-3 0-5.8-0.7-8.2-2.1 5-2.9 8.2-8.3 8.2-14.5s-3.2-11.6-8.2-14.5c2.4-1.4 5.2-2.1 8.2-2.1z"></path></svg>
+  </button>
   <button id="fullscreen" class="off">
-    <svg id="fullscreen-off" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40" style="vertical-align:middle;fill:#666"><path d="m23.4 8.4h8.2v8.2h-3.2v-5h-5v-3.2z m5 20v-5h3.2v8.2h-8.2v-3.2h5z m-20-11.8v-8.2h8.2v3.2h-5v5h-3.2z m3.2 6.8v5h5v3.2h-8.2v-8.2h3.2z"></path></svg>
-    <svg id="fullscreen-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40" style="vertical-align:middle;fill:#666"><path d="m26.6 13.4h5v3.2h-8.2v-8.2h3.2v5z m-3.2 18.2v-8.2h8.2v3.2h-5v5h-3.2z m-10-18.2v-5h3.2v8.2h-8.2v-3.2h5z m-5 13.2v-3.2h8.2v8.2h-3.2v-5h-5z"></path></svg>
+    <svg id="fullscreen-off" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m23.4 8.4h8.2v8.2h-3.2v-5h-5v-3.2z m5 20v-5h3.2v8.2h-8.2v-3.2h5z m-20-11.8v-8.2h8.2v3.2h-5v5h-3.2z m3.2 6.8v5h5v3.2h-8.2v-8.2h3.2z"></path></svg>
+    <svg id="fullscreen-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m26.6 13.4h5v3.2h-8.2v-8.2h3.2v5z m-3.2 18.2v-8.2h8.2v3.2h-5v5h-3.2z m-10-18.2v-5h3.2v8.2h-8.2v-3.2h5z m-5 13.2v-3.2h8.2v8.2h-3.2v-5h-5z"></path></svg>
+  </button>
+  <button id="install" class="installed">
+    <svg preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m8.4 30h23.2v3.4h-23.2v-3.4z m23.2-15l-11.6 11.6-11.6-11.6h6.6v-10h10v10h6.6z"></path></svg>
   </button>
 </div>
+<div id="welcome"></div>
 <div id="icon"></div>
 <div id="timer" class="work">
   <div id="message"></div>
@@ -174,27 +193,29 @@ const play = (() => {
   const types = ['sine', 'square', 'sawtooth', 'triangle']
   const notes = Object.fromEntries(signs.slice(0,8)
     .flatMap((_,o)=>signs.map((s,n)=>[s+(o+1),55*2**((12*o + n)/12)])))
-  const noOp = () => {}
-  const sound = (frequency, type = 'sine') => {
+  const sound = (frequency, type = 'sine', start = 0) => {
     const o = context.createOscillator()
     const g = context.createGain()
     o.type = type
     o.frequency.value = frequency
     o.connect(g)
     g.connect(context.destination)
-    _muted || o.start(0)
+    o.start(start)
     return g
   }
 
-  const chainNote = (next, noteStr) => () => {
-    if (_muted) return
-    const [ note, rest = '' ] = noteStr.split('.')
-    const duration = durations[rest.slice(0, -1)] / tempo
-    const g = sound(notes[note], types[rest[rest.length - 1]])
-    g.gain.exponentialRampToValueAtTime(1e-9, context.currentTime + duration)
-    setTimeout(next, duration*1000)
+  const p = melody => {
+    if (_muted) return 0
+    let delay = context.currentTime
+    for (const noteStr of melody.split('+')) {
+      const [ note, rest = '' ] = noteStr.split('.')
+      const duration = durations[rest.slice(0, -1)] / tempo
+      const g = sound(notes[note], types[rest[rest.length - 1]], delay)
+      g.gain.exponentialRampToValueAtTime(1e-9, delay += duration)
+    }
+    return delay
   }
-  const p = melody => melody.split('+').reduceRight(chainNote, noOp)()
+
   p.sound = sound
   p.mute = () => _muted = true
   p.unmute = () => _muted = false
@@ -240,12 +261,13 @@ const toJSON = v => {try{return JSON.stringify(v)}catch(err){}}
 const store = defaults => {
   const _set = {}
   const _get = {}
+  const s = localStorage
   for (const [k,v] of Object.entries(defaults)) {
     switch (typeof v) {
-      case 'boolean': _get[k] = Boolean(localStorage[k])||v; _set[k] = x => localStorage[k] = (_get[k] = Boolean(x)) || ''; break
-      case 'number': _get[k] = Number(localStorage[k])||v; _set[k] = x => localStorage[k] = _get[k] = Number(x); break
-      case 'string': _get[k] = localStorage[k]||v;_set[k] = x => localStorage[k] = (_get[k] = String(x == null ? '' : x)); break
-      default: _get[k] = fromJSON(localStorage[k])||v; _set[k] = x => localStorage[k] = toJSON(_get[k] = x); break;
+    case 'boolean': _get[k] = Boolean(s[k]) ||v;_set[k] = x => s[k] = (_get[k] = Boolean(x)) || ''          ;break
+    case 'number':  _get[k] = Number(s[k])  ||v;_set[k] = x => s[k] =  _get[k] = Number(x)                  ;break
+    case 'string':  _get[k] = s[k]          ||v;_set[k] = x => s[k] = (_get[k] = String(x == null ? '' : x));break
+    default:        _get[k] = fromJSON(s[k])||v;_set[k] = x => s[k] = toJSON(_get[k] = x)                   ;break
     }
   }
   return {_get, _set}
@@ -253,9 +275,11 @@ const store = defaults => {
 
 
 const getState = () => timerEl.classList.contains('work') ? 'work' : 'pause'
+const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
+const dark = matchMedia('(prefers-color-scheme: dark)').matches
 
 const { _set, _get } = store({
-  theme: 'system',
+  theme: dark ? 'dark' : 'light',
   state: 'work',
   start: 0,
   stack: [],
@@ -263,50 +287,23 @@ const { _set, _get } = store({
   work: '',
 })
 
-const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
-const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches
-const dark = matchMedia('(prefers-color-scheme: dark)').matches
-if (_get.theme === 'dark' || _get.theme ==! 'light' || dark) {
-  document.documentElement.classList.add('dark')
-}
-
 const favEl = document.getElementById('fav')
 const minEl = document.getElementById('min')
 const secEl = document.getElementById('sec')
 const bellEl = document.getElementById('bell')
 const iconEl = document.getElementById('icon')
+const themeEl = document.getElementById('theme')
 const timerEl = document.getElementById('timer')
 const titleEl = document.getElementById('title')
 const signInEl = document.getElementById('sign-in')
 const messageEl = document.getElementById('message')
+const installEl = document.getElementById('install')
+const welcomeEl = document.getElementById('welcome')
 const fullscreenEl = document.getElementById('fullscreen')
 
 const S = 1000, M = 60*S
 
 const durations = { work: 25*M, pause: 5*M }
-const icons = {
-  pause: ['','pause','🎮','🎬','📚','🛀','🧹','📞','🧘','👶','🌻','🌸','💗','🍫','☕','🍨','🤸','💪','🍻','🍉','💤','🚬','💩','🛒'],
-  work: ['','work','👩‍💻','👨‍💻','👷','👩‍💼','👩‍🚀','👨‍🚀','👩‍⚕️','👨‍⚕️','👩‍🔧','👨‍🎨','👩‍🎨','💼','🧰','🛠','⚒️','🚧','🎓','👔','🥼','🚜','💻','✍','🏭'],
-}
-
-const iconIdx = {
-  pause: Math.max(icons.pause.indexOf(_get.pause), 0),
-  work: Math.max(icons.work.indexOf(_get.work), 0),
-}
-
-const updateIcon = (key, icon) => {
-  icon ? _set[key](icon) : (icon = _get[key])
-  iconEl.textContent = icon
-  iconIdx[key] = Math.max(icons[key].indexOf(_get[key]), 0)
-}
-
-iconEl.addEventListener('click', (e) => {
-  const i = icons[_get.state]
-  const next = (Math.max(i.indexOf(_get[_get.state]), 0) + 1) % i.length
-  updateIcon(_get.state, i[next])
-})
-
-updateIcon(_get.state)
 
 let _db
 const save = async (now, prev = 0) => {
@@ -327,6 +324,7 @@ const getColor = overtime => {
   if (_get.state === 'work') return dark ? '#fff' : '#000'
   return dark ? '#5bf' : '#04b'
 }
+
 const setFav = (canvasEl => {
   const ctx = canvasEl.getContext('2d')
   ctx.font = '84px "IBM Plex Mono"'
@@ -375,37 +373,66 @@ const update = () => {
   secEl.textContent = String(sec).padStart(2, '0')
 }
 
-timerEl.addEventListener('click', (e) => {
+// HANDLE SWITCH
+// todo: fast toggles resume a timer (less than 1 min)
+const handleSwitch = (e) => {
   const now = getTime()
   _set.state(_get.state === 'work' ? 'pause' : 'work')
   save(now, _get.start)
   _set.start(now)
   update()
-})
+}
 
-if (_get.start) {
-  timerEl.style.opacity = 0
-  setTimeout(() => timerEl.style.opacity = 1, 15)
-  update()
+
+// ICONS
+const icons = {
+  pause: ['','pause','🎮','🎬','📚','🛀','🧹','📞','🧘','👶','🌻','🌸','💗','🍫','☕','🍨','🤸','💪','🍻','🍉','💤','🚬','💩','🛒'],
+  work: ['','work','👩‍💻','👨‍💻','👷','👩‍💼','👩‍🚀','👨‍🚀','👩‍⚕️','👨‍⚕️','👩‍🔧','👨‍🎨','👩‍🎨','💼','🧰','🛠','⚒️','🚧','🎓','👔','🥼','🚜','💻','✍','🏭'],
+}
+
+const iconIdx = {
+  pause: Math.max(icons.pause.indexOf(_get.pause), 0),
+  work: Math.max(icons.work.indexOf(_get.work), 0),
+}
+
+const updateIcon = (key, icon) => {
+  icon ? _set[key](icon) : (icon = _get[key])
+  iconEl.textContent = icon
+  iconIdx[key] = Math.max(icons[key].indexOf(_get[key]), 0)
+  // todo: save icon in firebase
+}
+
+updateIcon(_get.state)
+const nextIcon = () => {
+  const i = icons[_get.state]
+  const next = (Math.max(i.indexOf(_get[_get.state]), 0) + 1) % i.length
+  updateIcon(_get.state, i[next])
+}
+
+// THEME
+document.documentElement.classList.toggle('dark', _get.theme === 'dark')
+const toggleTheme = () => {
+  const theme = _set.theme(_get.theme === 'dark' ? 'light' : 'dark')
+  document.documentElement.classList.toggle('dark', theme === 'dark')
 }
 
 // BELL
-bellEl.addEventListener('click', () => {
+const toggleSound = () => {
   const off = !bellEl.classList.contains('off')
   bellEl.classList.toggle('off', off)
   if (off) return play.mute()
   play.unmute()
-  setTimeout(() => play('A7.ED+B7.ED+CS7.BD'), 150)
-})
+  play('A7.ED+B7.ED+CS7.BD')
+}
 
 // FULLSCREEN
-fullscreenEl.addEventListener('click', () => {
+const toggleFullScreen = () => {
   const off = document.fullscreenElement === document.documentElement
   fullscreenEl.classList.toggle('off', off)
   mobile && play.keepAlive(!off)
   if (off) return document.exitFullscreen()
   document.documentElement.requestFullscreen()
-})
+}
 
 // DATABASE
 const fetchText = async url => (await fetch(url)).text()
@@ -443,7 +470,7 @@ const getUser = () => new Promise((s) => {
 const init = async app => {
   signInEl.disabled = false
   if (!app) {
-    signInEl.textContent = `offline, retry`
+    signInEl.className = 'retry'
     signInEl.onclick = () => {
       signInEl.disabled = true
       load().catch(console.error).then(init)
@@ -451,14 +478,21 @@ const init = async app => {
     return
   }
   const { user, error } = await auth()
-  signInEl.style.opacity = 1
   if (!user) {
+    signInEl.className = 'off'
     error && console.dir(error)
     signInEl.onclick = signIn
     return
   }
+  signInEl.className = ''
+  signInEl.onclick = async () => {
+    signInEl.disabled = true
+    await firebase.auth().signOut()
+    signInEl.disabled = false
+    signInEl.className = 'off'
+    _db = undefined
+  }
   _db = undefined
-  signInEl.textContent = `${user.email} sign-out`
   // todo, handle sign out
   setTimeout(() => signInEl.style.opacity = '', 35000)
   const db = firebase.database()
@@ -482,6 +516,28 @@ const init = async app => {
   _db = { timers }
 }
 
+
+// UNLOCK
+// Sound api require an interaction, so we interact...
+welcomeEl.textContent = mobile ? 'touch to unlock' : 'click or hit any key to unlock'
+const unlock = () => {
+  removeEventListener('keydown', unlock)
+  removeEventListener('click', unlock)
+  timerEl.addEventListener('click', handleSwitch)
+  bellEl.addEventListener('click', toggleSound)
+  iconEl.addEventListener('click', nextIcon)
+  themeEl.addEventListener('click', toggleTheme)
+  fullscreenEl.addEventListener('click', toggleFullScreen)
+  document.body.classList.remove('lock')
+  play.unmute()
+  play('CS6.ED')
+}
+
+
+// INIT
+addEventListener('keydown', unlock)
+addEventListener('click', unlock)
+_get.start && update()
 load().catch(console.error).then(init)
 
 
