@@ -3,8 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="title" content="Nice Timer">
+  <meta name="description" content="A Nice Timer">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nice-timer.web.app/">
+  <meta property="og:title" content="Nice Timer">
+  <meta property="og:description" content="A Nice Timer">
+  <meta property="og:image" content="https://nice-timer.web.app/preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="628">
+
+
+  <!-- Twitter -->
+  <meta name="twitter:creator" content="@GodOfMacro">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://nice-timer.web.app/">
+  <meta name="twitter:title" content="Nice Timer">
+  <meta name="twitter:description" content="A Nice Timer">
+  <meta name="twitter:image" content="https://nice-timer.web.app/preview.png">
   <link id="fav" rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;,">
-  <title id="title">Work</title>
+  <title id="title">Nice Timer</title>
 <style>
 /* font */
 @font-face {
@@ -351,9 +371,9 @@ const switchState = async () => {
   const ts = getTime()
   const state = _get.state === 'work' ? 'pause' : 'work'
   const icon = _get[state]
-  const next = { ts, prev: current.ts, state, icon }
+  const next = { icon, prev: current.ts, state, ts }
   if (ts - current.ts < (5*S)) {
-    const prev = applyData({ ts: current.prev, prev: 0, state, icon })
+    const prev = applyData({ icon, prev: 0, state, ts: current.prev })
     return Promise.all([
       getData(prev.ts).then(applyData),
       delData(current.ts),
@@ -483,8 +503,16 @@ const load = async () => {
     '/__/firebase/7.13.1/firebase-app.js',
     '/__/firebase/7.13.1/firebase-auth.js',
     '/__/firebase/7.13.1/firebase-database.js',
-    '/__/firebase/init.js',
   ])
+
+  firebase.initializeApp({
+    apiKey: 'AIzaSyCrDohraCBHQ1lOYifOowue2sNFb4Q7ysQ',
+    authDomain: 'nice-timer.web.app',
+    databaseURL: 'https://nice-timer.firebaseio.com',
+    messagingSenderId: '876712947752',
+    projectId: 'nice-timer',
+    storageBucket: 'nice-timer.appspot.com'
+  })
   return firebase.app()
 }
 
