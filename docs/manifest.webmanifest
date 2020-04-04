@@ -1,0 +1,23 @@
+{
+  "name": "Nice Timer",
+  "short_name": "Nice Timer",
+  "start_url": ".",
+  "display": "fullscreen",
+  "theme_color": "#000",
+  "background_color": "#000",
+  "description": "A nice timer",
+  "icons": [
+      { "src": "/48.png", "type": "image/png", "sizes": "48x48" },
+      { "src": "/72.png", "type": "image/png", "sizes": "72x72" },
+      { "src": "/96.png", "type": "image/png", "sizes": "96x96" },
+      { "src": "/144.png", "type": "image/png", "sizes": "144x144" },
+      { "src": "/192.png", "type": "image/png", "sizes": "192x192" },
+      { "src": "/512.png", "type": "image/png", "sizes": "512x512" },
+      { "src": "/m48.png", "type": "image/png", "sizes": "48x48", "purpose": "maskable" },
+      { "src": "/m72.png", "type": "image/png", "sizes": "72x72", "purpose": "maskable" },
+      { "src": "/m96.png", "type": "image/png", "sizes": "96x96", "purpose": "maskable" },
+      { "src": "/m144.png", "type": "image/png", "sizes": "144x144", "purpose": "maskable" },
+      { "src": "/m192.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
+      { "src": "/m512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" },
+  ]
+}

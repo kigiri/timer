@@ -283,6 +283,7 @@ const store = defaults => {
 
 const getState = () => timerEl.classList.contains('work') ? 'work' : 'pause'
 const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
+const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches
 const dark = matchMedia('(prefers-color-scheme: dark)').matches
 const noaudio = !window.AudioContext
 
@@ -533,6 +534,8 @@ const init = async app => {
   timers.child(getTime().toString(36))
 }
 
+// INSTALL
+navigator.serviceWorker.register('/service.js')
 
 // UNLOCK
 // Sound api require an interaction, so we interact...
