@@ -284,7 +284,8 @@ const store = defaults => {
 
 const getState = () => timerEl.classList.contains('work') ? 'work' : 'pause'
 const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
-const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches
+const fullscreen = matchMedia('(display-mode: fullscreen)').matches
+const standalone = fullscreen || navigator.standalone || matchMedia('(display-mode: standalone)').matches
 const dark = matchMedia('(prefers-color-scheme: dark)').matches
 const noaudio = !window.AudioContext
 
@@ -432,7 +433,7 @@ const update = () => {
 
 // ICONS
 const icons = {
-  pause: ['☕', '📚', '🤸', '🧘', '📞', '🌻'],
+  pause: ['☕', '📚', '🤸', '💤', '📞', '🌻'],
   work: ['👔', '⚒️', '🎓', '🥼', '✍', '👩‍💻'],
 }
 
@@ -464,7 +465,7 @@ const toggleTheme = () => {
 
 // BELL
 noaudio && (bellEl.style.display = 'none')
-bellEl.classList.toggle('off', noaudio || _get.sound === 'off')
+bellEl.classList.toggle('off', _get.sound === 'off')
 play.muted(_get.sound === 'off')
 const toggleSound = () => {
   const off = !bellEl.classList.contains('off')
@@ -475,6 +476,7 @@ const toggleSound = () => {
 }
 
 // FULLSCREEN
+fullscreen && (fullscreenEl.style.display = 'none')
 const toggleFullScreen = () => {
   const off = document.fullscreenElement === document.documentElement
   fullscreenEl.classList.toggle('off', off)
@@ -557,10 +559,9 @@ const init = async app => {
 
 // INSTALL
 navigator.serviceWorker && navigator.serviceWorker.register('/service.js')
-// todo: switch emoji with scroll / swipe
 
 // UNLOCK
-// Sound api require an interaction, so we interact...
+// Sound api may require an interaction, so we interact...
 welcomeEl.textContent = mobile ? 'touch to unlock' : 'click or hit any key to unlock'
 const unlock = () => {
   removeEventListener('keydown', unlock)
