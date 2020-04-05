@@ -186,6 +186,7 @@ body, #timer { background: #fff }
 </div>
 <script>
 'use strict'
+const V = '05.04.2020'
 // get relative time as text
 const relatime = ((l,r,f=([u,s],d)=>r.format(~~(d/s),u))=>d=>f(l.find(([u,s])=>Math.abs(d)>s||u[0]=='s'),d))(Object.entries({year:31536e6,month:2628e6,day:864e5,hour:36e5,minute:6e4,second:1e3}),new Intl.RelativeTimeFormat('en',{style:'narrow'}))
 
@@ -298,6 +299,7 @@ const loadHash = () => {
 loadHash()
 addEventListener('hashchange', loadHash)
 
+localStorage.version === V || (localStorage.clear(), localStorage.version = V)
 const { _set, _get } = store({
   ts: 0,
   prev: 0,

@@ -1,4 +1,4 @@
-const v = '01.04.2020'
+const V = '05.04.2020'
 
 const urls = [
   '/index.html',
@@ -8,15 +8,15 @@ const urls = [
 ]
 
 addEventListener('sync', (e) => {
-  e.waitUntil(fetch(urls[0]).then(async (r) => r.ok && (await caches.open(v)).put(urls[0], r)))
+  e.waitUntil(fetch(urls[0]).then(async (r) => r.ok && (await caches.open(V)).put(urls[0], r)))
 })
 
-addEventListener('install', e => e.waitUntil(caches.open(v)
+addEventListener('install', e => e.waitUntil(caches.open(V)
   .then(cache => cache.addAll(urls))))
 
 const handleFetch = async e => {
   if (e.request.url.includes('no-cache') || e.request.method !== 'GET') return fetch(e.request)
-  const cache = await caches.open(v)
+  const cache = await caches.open(V)
   const url = urls.includes(e.request.url) ? e.request.url : urls[0]
   const cacheRes = await caches.match(e.request.url)
   if (cacheRes) return cacheRes
