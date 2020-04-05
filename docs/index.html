@@ -192,27 +192,10 @@ const relatime = ((l,r,f=([u,s],d)=>r.format(~~(d/s),u))=>d=>f(l.find(([u,s])=>M
 // play notes
 const play = (() => {
   let _muted = true, _silentSound
-  const signs = ['A','AS', 'B', 'C', 'CS', 'D', 'DS', 'E', 'F', 'FS', 'G', 'GS']
-  // DF CS
-  // EF DS
-  // GF FS
-  // AF GS
-  // BF AS
+  // todo: handle alias = {DF:'CS',EF:'DS',GF:'FS',AF:'GS',BF:'AS'}
+  const signs = 'A.AS.B.C.CS.D.DS.E.F.FS.G.GS'.split('.')
   const tempo = 100
-  const durations = {
-    B: 128, // BREVE
-    W: 64, // WHOLE
-    H: 32, // HALF
-    Q: 16, // QUARTER
-    E: 8, // EIGHTH
-    S: 4, // SIXTEENTH
-    BD: 128+64, // BREVE DOT
-    WD: 64+32, // WHOLE DOT
-    HD: 32+16, // HALF DOT
-    QD: 16+8, // QUARTER DOT
-    ED: 8+4, // EIGHTH DOT
-    SD: 4+2, // SIXTEENTH DOT
-  }
+  const durations = {B:128,W:64,H:32,Q:16,E:8,S:4,BD:192,WD:96,HD:48,QD:24,ED:12,SD:6}
 
   // note: exponentialRampToValueAtTime seems borken on FF, so we define our own curve
   const expWave = new Float32Array([...Array(9).keys()].map(n => (Math.exp(n) - 1) / Math.exp(8)).reverse())
@@ -283,23 +266,18 @@ const getTime = (() => {
   return () => offset + Date.now()
 })()
 
-const fromJSON = v => {try{return JSON.parse(v)}catch(err){}}
-const toJSON = v => {try{return JSON.stringify(v)}catch(err){}}
 const store = defaults => {
-  const _set = {}
-  const _get = {}
-  const s = localStorage
-  for (const [k,v] of Object.entries(defaults)) {
-    switch (typeof v) {
-    case 'boolean': _get[k] = Boolean(s[k]) ||v;_set[k] = x => s[k] = (_get[k] = Boolean(x)) || ''          ;break
-    case 'number':  _get[k] = Number(s[k])  ||v;_set[k] = x => s[k] =  _get[k] = Number(x)                  ;break
-    case 'string':  _get[k] = s[k]          ||v;_set[k] = x => s[k] = (_get[k] = String(x == null ? '' : x));break
-    default:        _get[k] = fromJSON(s[k])||v;_set[k] = x => s[k] = toJSON(_get[k] = x)                   ;break
-    }
+  const _set = {}, _get = {}
+  const stringify = x => (x == null || Number.isNaN(x)) ? '' : String(x)
+  for (const [k, value = ''] of Object.entries(defaults)) {
+    const json = !'boolean.number.string'.includes(typeof value)
+    const make = json ? JSON.parse : value.constructor
+    const prep = json ? JSON.stringify : stringify
+    _get[k] = localStorage[k] == null ? value : make(localStorage[k])
+    _set[k] = x => (_get[k] === x || (localStorage[k] = prep(_get[k] = x)), x)
   }
-  return {_get, _set}
+  return { _get, _set }
 }
-
 
 const getState = () => timerEl.classList.contains('work') ? 'work' : 'pause'
 const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
@@ -307,16 +285,27 @@ const standalone = navigator.standalone || matchMedia('(display-mode: standalone
 const dark = matchMedia('(prefers-color-scheme: dark)').matches
 const noaudio = !window.AudioContext
 
-// todo: personalize state with url params
+const S = 1000, M = 60*S
+const durations = {}
+const loadHash = () => {
+  const [w = 25, p = 5] = location.hash.slice(1).split('-').map(Number)
+  if (durations.work === w*M || durations.pause === p*M) return
+  durations.work = w*M
+  durations.pause = p*M
+  history.replaceState({}, '', `${location.origin}${location.pathname}${location.search}#${w}-${p}`)
+}
+loadHash()
+addEventListener('hashchange', loadHash)
+
 const { _set, _get } = store({
-  theme: dark ? 'dark' : 'light',
-  state: 'pause',
-  muted: false,
-  prev: 0,
   ts: 0,
+  prev: 0,
+  state: 'pause',
   stack: [],
-  pause: '',
-  work: '',
+  pause: '👔',
+  work: '☕',
+  sound: 'off',
+  theme: dark ? 'dark' : 'light',
 })
 
 const favEl = document.getElementById('fav')
@@ -332,10 +321,6 @@ const messageEl = document.getElementById('message')
 const installEl = document.getElementById('install')
 const welcomeEl = document.getElementById('welcome')
 const fullscreenEl = document.getElementById('fullscreen')
-
-const S = 1000, M = 60*S
-
-const durations = { work: 25*M, pause: 5*M }
 
 let _db
 const toVal = ref => ref && ref.val && ref.val()
@@ -441,8 +426,8 @@ const update = () => {
 
 // ICONS
 const icons = {
-  pause: ['','pause','🎮','🎬','📚','🛀','🧹','📞','🧘','👶','🌻','🌸','💗','🍫','☕','🍨','🤸','💪','🍻','🍉','💤','🚬','💩','🛒'],
-  work: ['','work','👩‍💻','👨‍💻','👷','👩‍💼','👩‍🚀','👨‍🚀','👩‍⚕️','👨‍⚕️','👩‍🔧','👨‍🎨','👩‍🎨','💼','🧰','⚒️','🚧','🎓','👔','🥼','🚜','💻','✍','🏭'],
+  pause: ['☕', '📚', '🤸', '🧘', '📞', '🌻'],
+  work: ['👔', '⚒️', '🎓', '🥼', '✍', '👩‍💻'],
 }
 
 const iconIdx = {
@@ -473,12 +458,12 @@ const toggleTheme = () => {
 
 // BELL
 noaudio && (bellEl.style.display = 'none')
-noaudio || _get.muted && bellEl.classList.add('off')
-play.muted(_get.muted)
+bellEl.classList.toggle('off', noaudio || _get.sound === 'off')
+play.muted(_get.sound === 'off')
 const toggleSound = () => {
   const off = !bellEl.classList.contains('off')
   bellEl.classList.toggle('off', off)
-  _set.muted(off)
+  _set.sound(off ? 'off' : 'on')
   play.muted(off)
   play('A7.ED+B7.ED+CS7.BD')
 }
@@ -514,24 +499,16 @@ const load = async () => {
     projectId: 'nice-timer',
     storageBucket: 'nice-timer.appspot.com'
   })
+
   return firebase.app()
 }
 
-const auth = async () => {
-  const user = await getUser()
-  return user ? { user } : firebase.auth().getRedirectResult()
-    .catch(error => ({ error }))
-}
+const signIn = () => firebase.auth().signInWithRedirect(new firebase.auth.GithubAuthProvider())
+const getUser = () => new Promise((s) => firebase.auth().onAuthStateChanged(s))
+const auth = () => getUser()
+  .then(user => user ? { user } : firebase.auth().getRedirectResult())
+  .catch(error => ({ error }))
 
-const signIn = (e) => {
-  // Start a sign in process for an unauthenticated user.
-  const provider = new firebase.auth.GithubAuthProvider()
-  firebase.auth().signInWithRedirect(provider)
-}
-
-const getUser = () => new Promise((s) => {
-  firebase.auth().onAuthStateChanged(s)
-})
 
 const init = async app => {
   signInEl.disabled = false
@@ -562,7 +539,7 @@ const init = async app => {
   const db = firebase.database()
   const timers = db.ref(user.uid)
 
-  // todo: load _get.stack
+  _set.stack([]) // for now, discard the stack if we use online
   const apply = snap => {
     const data = toVal(snap)
     data && applyData(data)
@@ -592,14 +569,15 @@ const unlock = () => {
   play('CS6.ED')
 }
 
-// todo: fix refresh intermediate state
 // INIT
 applyData(_get.stack[_get.stack.length - 1] || getCurrent())
-const skipUnlock = noaudio || _get.muted || !_get.ts
-skipUnlock || addEventListener('keydown', unlock)
-skipUnlock || addEventListener('click', unlock)
-skipUnlock && unlock()
-load().catch(console.error).then(init)
+setTimeout(async () => {
+  const skipUnlock = noaudio || _get.sound === 'off' || play.context.currentTime > 0 || !_get.ts
+  skipUnlock || addEventListener('keydown', unlock)
+  skipUnlock || addEventListener('click', unlock)
+  skipUnlock && unlock()
+  await init(await load().catch(console.error)).catch(console.error)
+})
 
 </script>
 </body>
