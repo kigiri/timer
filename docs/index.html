@@ -300,11 +300,11 @@ addEventListener('hashchange', loadHash)
 const { _set, _get } = store({
   ts: 0,
   prev: 0,
-  state: 'pause',
-  stack: [],
-  pause: '👔',
-  work: '☕',
+  work: '👔',
+  pause: '☕',
   sound: 'off',
+  stack: [],
+  state: 'pause',
   theme: dark ? 'dark' : 'light',
 })
 
@@ -336,7 +336,7 @@ const getData = async ts => _db
   ? toVal(await _db.timers.child(ts.toString(36)).once('value'))
   : _get.stack.find(data => data.ts === ts)
 
-const applyData = (data) => {
+const applyData = data => {
   if (!data) return console.warn(Error(`applyData called with no data`))
   _set.ts(data.ts || 0)
   _set.prev(data.prev || 0)
@@ -358,7 +358,7 @@ const switchState = async () => {
   const state = _get.state === 'work' ? 'pause' : 'work'
   const icon = _get[state]
   const next = { icon, prev: current.ts, state, ts }
-  if (ts - current.ts < (5*S)) {
+  if (ts - current.ts < M) {
     const prev = applyData({ icon, prev: 0, state, ts: current.prev })
     return Promise.all([
       getData(prev.ts).then(applyData),
@@ -550,7 +550,7 @@ const init = async app => {
 }
 
 // INSTALL
-navigator.serviceWorker.register('/service.js')
+navigator.serviceWorker && navigator.serviceWorker.register('/service.js')
 // todo: switch emoji with scroll / swipe
 
 // UNLOCK
