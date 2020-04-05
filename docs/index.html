@@ -15,7 +15,6 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="628">
 
-
   <!-- Twitter -->
   <meta name="twitter:creator" content="@GodOfMacro">
   <meta name="twitter:card" content="summary_large_image">
@@ -215,6 +214,8 @@ const play = (() => {
     SD: 4+2, // SIXTEENTH DOT
   }
 
+  // note: exponentialRampToValueAtTime seems borken on FF, so we define our own curve
+  const expWave = new Float32Array([...Array(9).keys()].map(n => (Math.exp(n) - 1) / Math.exp(8)).reverse())
   const context = window.AudioContext && new AudioContext()
   const types = ['sine', 'square', 'sawtooth', 'triangle']
   const notes = Object.fromEntries(signs.slice(0,8)
@@ -237,8 +238,8 @@ const play = (() => {
       const [ note, rest = '' ] = noteStr.split('.')
       const duration = durations[rest.slice(0, -1)] / tempo
       const g = sound(notes[note], types[rest[rest.length - 1]], delay)
-      g.gain.exponentialRampToValueAtTime(1e-9, delay += duration)
-      // todo: exponentialRampToValueAtTime seems borken on FF
+      g.gain.setValueCurveAtTime(expWave, delay, duration)
+      delay += duration
     }
     return Math.floor((delay - context.currentTime) * 1000)
   }
