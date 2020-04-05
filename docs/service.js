@@ -5,7 +5,6 @@ const urls = [
   '/__/firebase/7.13.1/firebase-app.js',
   '/__/firebase/7.13.1/firebase-auth.js',
   '/__/firebase/7.13.1/firebase-database.js',
-  '/__/firebase/init.js',
 ]
 
 addEventListener('sync', (e) => {

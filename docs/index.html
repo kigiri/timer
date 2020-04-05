@@ -256,11 +256,12 @@ const getTime = (() => {
     if (req.status !== 200) return
     const end = Date.now()
     const p = Math.floor((end - begin) / 2)
-    if (p >= precision) return
-    while (await new Promise(s => next = s) < 4) {} // done
-    localStorage.timePrecision = precision = p
-    localStorage.timeOffset = offset = Number(req.responseText) + p - end
-    if (++iteration < 10) return setTimeout(calcDiff, 150)
+    if (p > 2 && p < precision) {
+      while (await new Promise(s => next = s) < 4) {} // done
+      localStorage.timePrecision = precision = p
+      localStorage.timeOffset = offset = Number(req.responseText) + p - end
+    }
+    if (iteration++ < 3) return setTimeout(calcDiff, 150)
   }
   calcDiff()
   return () => offset + Date.now()
@@ -288,7 +289,7 @@ const noaudio = !window.AudioContext
 const S = 1000, M = 60*S
 const durations = {}
 const loadHash = () => {
-  const [w = 25, p = 5] = location.hash.slice(1).split('-').map(Number)
+  const [w = 25, p = 5] = location.hash.slice(1).split('-').filter(Boolean).map(Number)
   if (durations.work === w*M || durations.pause === p*M) return
   durations.work = w*M
   durations.pause = p*M
