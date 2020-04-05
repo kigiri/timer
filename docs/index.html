@@ -186,7 +186,7 @@ body, #timer { background: #fff }
 </div>
 <script>
 'use strict'
-const V = '05.04.2020'
+const V = '05.04.2020.1'
 // get relative time as text
 const relatime = ((l,r,f=([u,s],d)=>r.format(~~(d/s),u))=>d=>f(l.find(([u,s])=>Math.abs(d)>s||u[0]=='s'),d))(Object.entries({year:31536e6,month:2628e6,day:864e5,hour:36e5,minute:6e4,second:1e3}),new Intl.RelativeTimeFormat('en',{style:'narrow'}))
 
@@ -421,10 +421,12 @@ const update = () => {
 
   if (outOfRange) return messageEl.textContent = relatime(diff)
   overtime && timings.find(t => -diff > t && -diff < t + S) && play('CS6.ED+A7.BD')
-  mobile || setFav(minEl.textContent = String(min).padStart(2, '0'), overtime)
   updateIcon(state)
   titleEl.textContent = `${state[0].toUpperCase()}${state.slice(1)}`
+  const minText = String(min).padStart(2, '0')
+  minEl.textContent = minText
   secEl.textContent = String(sec).padStart(2, '0')
+  mobile || setFav(minText, overtime)
 }
 
 // ICONS
