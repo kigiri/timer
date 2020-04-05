@@ -18,6 +18,6 @@
       { "src": "/m96-fs8.png", "type": "image/png", "sizes": "96x96", "purpose": "maskable" },
       { "src": "/m144-fs8.png", "type": "image/png", "sizes": "144x144", "purpose": "maskable" },
       { "src": "/m192-fs8.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
-      { "src": "/m512-fs8.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" },
+      { "src": "/m512-fs8.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
   ]
 }
