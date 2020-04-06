@@ -6,6 +6,7 @@
   "theme_color": "#000",
   "background_color": "#000",
   "description": "A nice timer",
+  "version": "06.04.2020",
   "icons": [
       { "src": "/48-fs8.png", "type": "image/png", "sizes": "48x48" },
       { "src": "/72-fs8.png", "type": "image/png", "sizes": "72x72" },
@@ -20,7 +21,13 @@
       { "src": "/m192-fs8.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
       { "src": "/m512-fs8.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
   ],
-  "serviceworker": {
-    "src": "/service.js"
-  }
+  "categories": ["productivity", "utilities"],
+  "orientation": "any",
+  "screenshots" : [
+    {
+      "src": "/preview.png",
+      "sizes": "1500x628",
+      "type": "image/png"
+    }
+  ]
 }

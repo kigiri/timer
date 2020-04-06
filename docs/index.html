@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="title" content="Nice Timer">
   <meta name="description" content="A Nice Timer">
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link id="manifest" rel="manifest" href="/manifest.webmanifest?version=06.04.2020">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
@@ -174,7 +174,6 @@ body, #timer { background: #fff }
 </div>
 <script>
 'use strict'
-const V = '06.04.2020'
 // get relative time as text
 const relatime = ((l,r,f=([u,s],d)=>r.format(~~(d/s),u))=>d=>f(l.find(([u,s])=>Math.abs(d)>s||u[0]=='s'),d))(Object.entries({year:31536e6,month:2628e6,day:864e5,hour:36e5,minute:6e4,second:1e3}),new Intl.RelativeTimeFormat('en',{style:'narrow'}))
 
@@ -240,7 +239,21 @@ const store = defaults => {
   return { _get, _set }
 }
 
-const getState = () => timerEl.classList.contains('work') ? 'work' : 'pause'
+const favEl = document.getElementById('fav')
+const minEl = document.getElementById('min')
+const secEl = document.getElementById('sec')
+const bellEl = document.getElementById('bell')
+const iconEl = document.getElementById('icon')
+const themeEl = document.getElementById('theme')
+const timerEl = document.getElementById('timer')
+const titleEl = document.getElementById('title')
+const messageEl = document.getElementById('message')
+const installEl = document.getElementById('install')
+const welcomeEl = document.getElementById('welcome')
+const manifestEl = document.getElementById('manifest')
+const fullscreenEl = document.getElementById('fullscreen')
+
+const version = manifestEl.href.split('=')[1]
 const mobile = /mobi|android|iphone|ipod|ipad/i.test(navigator.userAgent)
 const fullscreen = matchMedia('(display-mode: fullscreen)').matches
 const standalone = fullscreen || navigator.standalone || matchMedia('(display-mode: standalone)').matches
@@ -270,20 +283,7 @@ const { _set, _get } = store({
   theme: dark ? 'dark' : 'light',
 })
 
-const favEl = document.getElementById('fav')
-const minEl = document.getElementById('min')
-const secEl = document.getElementById('sec')
-const bellEl = document.getElementById('bell')
-const iconEl = document.getElementById('icon')
-const themeEl = document.getElementById('theme')
-const timerEl = document.getElementById('timer')
-const titleEl = document.getElementById('title')
-const messageEl = document.getElementById('message')
-const installEl = document.getElementById('install')
-const welcomeEl = document.getElementById('welcome')
-const fullscreenEl = document.getElementById('fullscreen')
-
-const getCurrent = () => ({ ..._get, icon: _get[state] })
+const getCurrent = () => ({ ..._get, icon: _get[_get.state] })
 const saveData = data => _set.stack([..._get.stack, data])
 const delData = ts => _set.stack(_get.stack.filter(data => data.ts === ts))
 const getData = ts => _get.stack.find(data => data.ts === ts)
@@ -423,9 +423,9 @@ const toggleFullScreen = () => {
 }
 
 // INSTALL
-const upToDate = localStorage.version === V
-upToDate || (localStorage.clear(), localStorage.version = V)
-navigator.serviceWorker && navigator.serviceWorker.register(`/service.js?v=${V}`)
+const upToDate = localStorage.version === version
+upToDate || (localStorage.clear(), localStorage.version = version)
+navigator.serviceWorker && navigator.serviceWorker.register(`/service.js?version=${version}`)
   .then(registration => upToDate || registration.update())
 
 // UNLOCK

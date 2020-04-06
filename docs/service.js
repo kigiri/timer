@@ -1,17 +1,12 @@
 const V = '06.04.2020'
 
-
-addEventListener('sync', (e) => {
-  e.waitUntil(fetch('/index.html').then(async (r) => r.ok && (await caches.open(V)).put('/index.html', r)))
-})
-
 addEventListener('install', e => e.waitUntil(caches.open(V)
-  .then(cache => cache.addAll(urls))))
+  .then(cache => cache.addAll(['/']))))
 
 const handleFetch = async e => {
   if (e.request.url.includes('no-cache') || e.request.method !== 'GET') return fetch(e.request)
   const cache = await caches.open(V)
-  const cacheRes = await caches.match('/index.html')
+  const cacheRes = await caches.match(e.request.url)
   if (cacheRes) return cacheRes
   const networkRes = await fetch(e.request)
   e.waitUntil(cache.put(e.request, networkRes.clone()))
