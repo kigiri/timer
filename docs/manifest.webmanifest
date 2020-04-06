@@ -2,7 +2,7 @@
   "name": "Nice Timer",
   "short_name": "Nice Timer",
   "start_url": ".",
-  "display": "fullscreen",
+  "display": "standalone",
   "theme_color": "#000",
   "background_color": "#000",
   "description": "A nice timer",

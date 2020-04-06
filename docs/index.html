@@ -476,7 +476,7 @@ const toggleSound = () => {
 }
 
 // FULLSCREEN
-fullscreen && (fullscreenEl.style.display = 'none')
+(fullscreen || !mobile) && (fullscreenEl.style.display = 'none')
 const toggleFullScreen = () => {
   const off = document.fullscreenElement === document.documentElement
   fullscreenEl.classList.toggle('off', off)
