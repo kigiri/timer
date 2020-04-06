@@ -111,10 +111,6 @@ html:not(.dark) #theme-dark,
 body:not(.lock) #welcome,
 .out-of-range #min,
 .out-of-range #sec,
-#sign-in:not(.retry) #sign-in-retry,
-#sign-in:not(.off) #sign-in-off,
-#sign-in.off #sign-in-on,
-#sign-in.retry #sign-in-on,
 #bell:not(.off) #sound-off,
 #bell.off #sound-on,
 #install.installed,
@@ -125,8 +121,6 @@ body:not(.lock) #welcome,
 body, button, #timer { color: #222 }
 body, #timer { background: #fff }
 #sec,
-#sign-in[disabled],
-#sign-in-on,
 #theme,
 #message:before,
 #bell:not(.off) { color: #888 }
@@ -143,8 +137,6 @@ body, #timer { background: #fff }
 .dark body,
 .dark #timer { background: #000 }
 .dark #sec,
-.dark #sign-in[disabled],
-.dark #sign-in-on,
 .dark #theme,
 .dark #message:before,
 .dark #bell:not(.off),
@@ -158,11 +150,6 @@ body, #timer { background: #fff }
 </head>
 <body class="lock">
 <div id="toolbar">
-  <button id="sign-in" disabled class="off">
-    <svg id="sign-in-retry" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m20 8.4c7.3 0 13.4 5.9 13.4 13.2s-6.1 13.4-13.4 13.4-13.4-6-13.4-13.4h3.4c0 5.6 4.5 10 10 10s10-4.4 10-10-4.5-10-10-10v6.8l-8.4-8.4 8.4-8.4v6.8z"></path></svg>
-    <svg id="sign-in-off" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m20 0c-11 0-20 9-20 20 0 8.8 5.7 16.3 13.7 19 1 0.2 1.3-0.5 1.3-1 0-0.5 0-2 0-3.7-5.5 1.2-6.7-2.4-6.7-2.4-0.9-2.3-2.2-2.9-2.2-2.9-1.9-1.2 0.1-1.2 0.1-1.2 2 0.1 3.1 2.1 3.1 2.1 1.7 3 4.6 2.1 5.8 1.6 0.2-1.3 0.7-2.2 1.3-2.7-4.5-0.5-9.2-2.2-9.2-9.8 0-2.2 0.8-4 2.1-5.4-0.2-0.5-0.9-2.6 0.2-5.3 0 0 1.7-0.5 5.5 2 1.6-0.4 3.3-0.6 5-0.6 1.7 0 3.4 0.2 5 0.7 3.8-2.6 5.5-2.1 5.5-2.1 1.1 2.8 0.4 4.8 0.2 5.3 1.3 1.4 2.1 3.2 2.1 5.4 0 7.6-4.7 9.3-9.2 9.8 0.7 0.6 1.4 1.9 1.4 3.7 0 2.7 0 4.9 0 5.5 0 0.6 0.3 1.2 1.3 1 8-2.7 13.7-10.2 13.7-19 0-11-9-20-20-20z"></path></svg>
-    <svg id="sign-in-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m29.7 8.6q5.3 4.5 5.3 11.4 0 6.3-4.4 10.6t-10.6 4.4-10.6-4.4-4.4-10.6q0-6.9 5.3-11.4l2.4 2.3q-4.3 3.6-4.3 9.1 0 4.8 3.4 8.2t8.2 3.4 8.2-3.4 3.4-8.2q0-5.5-4.3-9z m-8.1-3.6v16.6h-3.2v-16.6h3.2z"></path></svg>
-  </button>
   <button id="bell">
     <svg id="sound-off" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m30 24.5l-14.9-15.7c0.4-0.2 0.8-0.4 1.2-0.6h0l0.5-0.2c0.2-0.1 0.5-0.1 0.7-0.2v-1.2c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5v1.2c4.8 1.2 7.5 5.4 7.5 10.6v6.1z m-10 12.1c-1.9 0-3.4-1.4-3.4-3.2h6.8c0 1.8-1.5 3.2-3.4 3.2z m-7-26.4c7.4 7.6 14.7 15.1 22 22.7l-2.1 2.1-3.4-3.4h-22.9v-1.6l3.4-3.4v-8.3c0-2.1 0.5-4.1 1.3-5.7l-4.7-4.6 2.2-2.2z"></path></svg>
     <svg id="sound-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m30 26.6l3.4 3.4v1.6h-26.8v-1.6l3.4-3.4v-8.2c0-5.2 2.7-9.4 7.5-10.6v-1.2c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5v1.2c4.8 1.2 7.5 5.5 7.5 10.6v8.2z m-10 10c-1.9 0-3.4-1.4-3.4-3.2h6.8c0 1.8-1.6 3.2-3.4 3.2z"></path></svg>
@@ -240,35 +227,6 @@ const play = (() => {
 
 // create dom element
 const el = (tag = 'div', props = {}) => Object.assign(document.createElement(tag), props)
-
-// fix local time
-const getTime = (() => {
-  let offset = Number(localStorage.timeOffset) || 0
-  let precision = Number(localStorage.timePrecision) || Infinity
-  const calcDiff = async iteration => {
-    const seed = Math.random().toString(36).slice(2)
-    const url = `https://us-central1-nice-timer.cloudfunctions.net/now?no-cache=${seed}`
-    const res = await fetch(url)
-    const unixtime = Number(await res.text())
-    if (!unixtime || req.status !== 200) return
-    const resource = performance
-      .getEntriesByType("resource")
-      .find(r => r.name === url)
-
-    const diff = resource.responseStart - resource.requestStart
-    const fromCache = resource.transferSize == null // not set in safari, fallback to timings
-      ? diff < 25 // usually firebase is fairly slow, so something too fast will be discarded
-      : resource.transferSize === 0
-
-    if (fromCache || precision < diff || unixtime > 900000) return // we also discard more than 15min diff
-    localStorage.timePrecision = precision = diff
-    localStorage.timeOffset = offset = unixtime + Math.floor(diff / 2) - end
-    if (iteration < 3) return setTimeout(calcDiff, 150, iteration + 1)
-  }
-  calcDiff(1)
-  return () => offset + Date.now()
-})()
-
 const store = defaults => {
   const _set = {}, _get = {}
   const stringify = x => (x == null || Number.isNaN(x)) ? '' : String(x)
@@ -320,26 +278,15 @@ const iconEl = document.getElementById('icon')
 const themeEl = document.getElementById('theme')
 const timerEl = document.getElementById('timer')
 const titleEl = document.getElementById('title')
-const signInEl = document.getElementById('sign-in')
 const messageEl = document.getElementById('message')
 const installEl = document.getElementById('install')
 const welcomeEl = document.getElementById('welcome')
 const fullscreenEl = document.getElementById('fullscreen')
 
-let _db
-const toVal = ref => ref && ref.val && ref.val()
-const saveData = data => _db
-  ? _db.timers.child(data.ts.toString(36)).set(data)
-  : _set.stack([..._get.stack, data])
-
-const delData = ts => _db
-  ? _db.timers.child(ts.toString(36)).remove()
-  : _set.stack(_get.stack.filter(data => data.ts === ts))
-
-const getData = async ts => _db
-  ? toVal(await _db.timers.child(ts.toString(36)).once('value'))
-  : _get.stack.find(data => data.ts === ts)
-
+const getCurrent = () => ({ ..._get, icon: _get[state] })
+const saveData = data => _set.stack([..._get.stack, data])
+const delData = ts => _set.stack(_get.stack.filter(data => data.ts === ts))
+const getData = ts => _get.stack.find(data => data.ts === ts)
 const applyData = data => {
   if (!data) return console.warn(Error(`applyData called with no data`))
   _set.ts(data.ts || 0)
@@ -351,23 +298,15 @@ const applyData = data => {
   return data
 }
 
-const getCurrent = () => {
-  const { ts, prev, state } = _get
-  return { ts, prev, state, icon: _get[state] }
-}
-
-const switchState = async () => {
+const switchState = () => {
   const current = getCurrent()
-  const ts = getTime()
+  const ts = Date.now()
   const state = _get.state === 'work' ? 'pause' : 'work'
   const icon = _get[state]
   const next = { icon, prev: current.ts, state, ts }
   if (ts - current.ts < M) {
-    const prev = applyData({ icon, prev: 0, state, ts: current.prev })
-    return Promise.all([
-      getData(prev.ts).then(applyData),
-      delData(current.ts),
-    ])
+    applyData(getData(prev.ts))
+    delData(current.ts)
   }
   return saveData(applyData(next))
 }
@@ -405,7 +344,7 @@ const update = () => {
   })
 
   const { state, ts } = _get
-  const now = getTime()
+  const now = Date.now()
   const delta = now - ts
   const dur = durations[state]
   const diff = dur - delta
@@ -452,7 +391,6 @@ const nextIcon = () => {
   const i = icons[_get.state]
   const next = (Math.max(i.indexOf(_get[_get.state]), 0) + 1) % i.length
   updateIcon(_get.state, i[next])
-  _db && _db.timers.child(_get.ts.toString(36)).set(getCurrent())
 }
 
 // THEME
@@ -484,78 +422,6 @@ const toggleFullScreen = () => {
   document.documentElement.requestFullscreen()
 }
 
-// DATABASE
-const fetchText = async url => (await fetch(url)).text()
-const loadScript = async urls => {
-  const files = await Promise.all(urls.map(fetchText))
-  document.head.appendChild(el('script', { innerHTML: files.join('\n') }))
-}
-
-const load = async () => {
-  await loadScript([
-    '/__/firebase/7.13.1/firebase-app.js',
-    '/__/firebase/7.13.1/firebase-auth.js',
-    '/__/firebase/7.13.1/firebase-database.js',
-  ])
-
-  firebase.initializeApp({
-    apiKey: 'AIzaSyCrDohraCBHQ1lOYifOowue2sNFb4Q7ysQ',
-    authDomain: 'nice-timer.web.app',
-    databaseURL: 'https://nice-timer.firebaseio.com',
-    messagingSenderId: '876712947752',
-    projectId: 'nice-timer',
-    storageBucket: 'nice-timer.appspot.com'
-  })
-
-  return firebase.app()
-}
-
-const signIn = () => firebase.auth().signInWithRedirect(new firebase.auth.GithubAuthProvider())
-const getUser = () => new Promise((s) => firebase.auth().onAuthStateChanged(s))
-const auth = () => getUser()
-  .then(user => user ? { user } : firebase.auth().getRedirectResult())
-  .catch(error => ({ error }))
-
-
-const init = async app => {
-  signInEl.disabled = false
-  if (!app) {
-    signInEl.className = 'retry'
-    signInEl.onclick = () => {
-      signInEl.disabled = true
-      load().catch(console.error).then(init)
-    }
-    return
-  }
-  const { user, error } = await auth()
-  if (!user) {
-    signInEl.className = 'off'
-    error && console.dir(error)
-    signInEl.onclick = signIn
-    return
-  }
-  signInEl.className = ''
-  signInEl.onclick = async () => {
-    signInEl.disabled = true
-    await firebase.auth().signOut()
-    signInEl.disabled = false
-    signInEl.className = 'off'
-    _db = undefined
-  }
-  setTimeout(() => signInEl.style.opacity = '', 35000)
-  const db = firebase.database()
-  const timers = db.ref(user.uid)
-
-  _set.stack([]) // for now, discard the stack if we use online
-  const apply = snap => {
-    const data = toVal(snap)
-    data && applyData(data)
-  }
-
-  timers.orderByChild('ts').limitToLast(1).on('value', s => s.forEach(apply))
-  _db = { timers }
-}
-
 // INSTALL
 const upToDate = localStorage.version === V
 upToDate || (localStorage.clear(), localStorage.version = V)
@@ -585,7 +451,6 @@ setTimeout(async () => {
   skipUnlock || addEventListener('keydown', unlock)
   skipUnlock || addEventListener('click', unlock)
   skipUnlock && unlock()
-  await init(await load().catch(console.error)).catch(console.error)
 })
 
 </script>

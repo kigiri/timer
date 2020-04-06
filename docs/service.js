@@ -1,14 +1,8 @@
 const V = '06.04.2020'
 
-const urls = [
-  '/index.html',
-  '/__/firebase/7.13.1/firebase-app.js',
-  '/__/firebase/7.13.1/firebase-auth.js',
-  '/__/firebase/7.13.1/firebase-database.js',
-]
 
 addEventListener('sync', (e) => {
-  e.waitUntil(fetch(urls[0]).then(async (r) => r.ok && (await caches.open(V)).put(urls[0], r)))
+  e.waitUntil(fetch('/index.html').then(async (r) => r.ok && (await caches.open(V)).put('/index.html', r)))
 })
 
 addEventListener('install', e => e.waitUntil(caches.open(V)
@@ -17,8 +11,7 @@ addEventListener('install', e => e.waitUntil(caches.open(V)
 const handleFetch = async e => {
   if (e.request.url.includes('no-cache') || e.request.method !== 'GET') return fetch(e.request)
   const cache = await caches.open(V)
-  const url = urls.includes(e.request.url) ? e.request.url : urls[0]
-  const cacheRes = await caches.match(e.request.url)
+  const cacheRes = await caches.match('/index.html')
   if (cacheRes) return cacheRes
   const networkRes = await fetch(e.request)
   e.waitUntil(cache.put(e.request, networkRes.clone()))

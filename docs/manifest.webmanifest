@@ -19,5 +19,8 @@
       { "src": "/m144-fs8.png", "type": "image/png", "sizes": "144x144", "purpose": "maskable" },
       { "src": "/m192-fs8.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
       { "src": "/m512-fs8.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
-  ]
+  ],
+  "serviceworker": {
+    "src": "/service.js"
+  }
 }
