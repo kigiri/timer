@@ -273,8 +273,6 @@ loadHash()
 addEventListener('hashchange', loadHash)
 
 const { _set, _get } = store({
-  ts: 0,
-  prev: 0,
   work: '👔',
   pause: '☕',
   sound: 'off',
@@ -283,32 +281,24 @@ const { _set, _get } = store({
   theme: dark ? 'dark' : 'light',
 })
 
-const getCurrent = () => ({ ..._get, icon: _get[_get.state] })
+const defaultState = { ts: 0, state: 'work', icon: _get.work }
+const getCurrent = () => _get.stack[_get.stack.length - 1] || defaultState
 const saveData = data => _set.stack([..._get.stack, data])
-const delData = ts => _set.stack(_get.stack.filter(data => data.ts === ts))
+const delData = ts => _set.stack(_get.stack.filter(data => data.ts !== ts))
+const updateData = data => _set.stack(_get.stack.map(d => d.ts === data.ts ? data : d))
 const getData = ts => _get.stack.find(data => data.ts === ts)
-const applyData = data => {
-  if (!data) return console.warn(Error(`applyData called with no data`))
-  _set.ts(data.ts || 0)
-  _set.prev(data.prev || 0)
-  _set.state(data.state || 'pause')
-  _set[data.state](data.icon)
-  _get.ts && cancelAnimationFrame(update)
-  _get.ts && requestAnimationFrame(update)
-  return data
-}
 
 const switchState = () => {
-  const current = getCurrent()
+  cancelAnimationFrame(update)
+  requestAnimationFrame(update)
+  const current = _get.stack[_get.stack.length - 1]
   const ts = Date.now()
-  const state = _get.state === 'work' ? 'pause' : 'work'
-  const icon = _get[state]
-  const next = { icon, prev: current.ts, state, ts }
-  if (ts - current.ts < M) {
-    applyData(getData(prev.ts))
-    delData(current.ts)
-  }
-  return saveData(applyData(next))
+  if (!current) return saveData({ ...defaultState, ts })
+  const state = current.state === 'work' ? 'pause' : 'work'
+  const next = { icon: _get[state], state, ts }
+  if (ts - current.ts > M) return saveData(next)
+  _get.stack[_get.stack.length - 2] || saveData(next)
+  delData(current.ts)
 }
 
 const getColor = overtime => {
@@ -335,15 +325,16 @@ setFav('00')
 
 
 // UPDATE DOCUMENT
-const timings = [...Array(10).keys()].map(n => n ** 2 * M + 1)
 let _timeout
 const update = () => {
+  const { ts, state, icon } = getCurrent()
+  if (!ts) return
+  
   // async loop
   Promise.resolve(clearTimeout(_timeout)).finally(() => {
     _timeout = setTimeout(update, (Math.floor((ts + delta) / S) + 1) * S - now)
   })
 
-  const { state, ts } = _get
   const now = Date.now()
   const delta = now - ts
   const dur = durations[state]
@@ -360,8 +351,8 @@ const update = () => {
   timerEl.classList.toggle('out-of-range', outOfRange)
 
   if (outOfRange) return messageEl.textContent = relatime(diff)
-  overtime && timings.find(t => -diff > t && -diff < t + S) && play('CS6.ED+A7.BD')
-  updateIcon(state)
+  overtime && diff < 0 && -diff < S && play('CS6.ED+A7.BD')
+  iconEl.textContent = icon
   titleEl.textContent = `${state[0].toUpperCase()}${state.slice(1)}`
   const minText = String(min).padStart(2, '0')
   minEl.textContent = minText
@@ -375,22 +366,13 @@ const icons = {
   work: ['👔', '⚒️', '🎓', '🥼', '✍', '👩‍💻'],
 }
 
-const iconIdx = {
-  pause: Math.max(icons.pause.indexOf(_get.pause), 0),
-  work: Math.max(icons.work.indexOf(_get.work), 0),
-}
-
-const updateIcon = (key, icon) => {
-  icon == null ? (icon = _get[key]) : _set[key](icon)
-  iconEl.textContent = icon
-  iconIdx[key] = Math.max(icons[key].indexOf(_get[key]), 0)
-}
-
-updateIcon(_get.state)
 const nextIcon = () => {
-  const i = icons[_get.state]
-  const next = (Math.max(i.indexOf(_get[_get.state]), 0) + 1) % i.length
-  updateIcon(_get.state, i[next])
+  const current = getCurrent()
+  const i = icons[current.state]
+  const icon = i[(Math.max(i.indexOf(current.icon), 0) + 1) % i.length]
+  console.log(icon)
+  _set[current.state](iconEl.textContent = icon)
+  updateData({ ...current, icon })
 }
 
 // THEME
@@ -445,7 +427,7 @@ const unlock = () => {
 }
 
 // INIT
-applyData(_get.stack[_get.stack.length - 1] || getCurrent())
+update()
 setTimeout(async () => {
   const skipUnlock = noaudio || _get.sound === 'off' || play.context.currentTime > 0 || !_get.ts
   skipUnlock || addEventListener('keydown', unlock)
