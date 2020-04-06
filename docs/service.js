@@ -1,4 +1,4 @@
-const V = '05.04.2020.1'
+const V = '06.04.2020'
 
 const urls = [
   '/index.html',
