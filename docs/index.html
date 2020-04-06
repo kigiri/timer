@@ -245,27 +245,27 @@ const el = (tag = 'div', props = {}) => Object.assign(document.createElement(tag
 const getTime = (() => {
   let offset = Number(localStorage.timeOffset) || 0
   let precision = Number(localStorage.timePrecision) || Infinity
-  let iteration = 0
-  const calcDiff = async () => {
-    const req = new XMLHttpRequest()
-    const begin = Date.now()
+  const calcDiff = async iteration => {
+    const seed = Math.random().toString(36).slice(2)
+    const url = `https://us-central1-nice-timer.cloudfunctions.net/now?no-cache=${seed}`
+    const res = await fetch(url)
+    const unixtime = Number(await res.text())
+    if (!unixtime || req.status !== 200) return
+    const resource = performance
+      .getEntriesByType("resource")
+      .find(r => r.name === url)
 
-    req.open('GET', `https://us-central1-nice-timer.cloudfunctions.net/now?no-cache`)
-    let next
-    req.onreadystatechange = () => next && next(req.readyState)
-    req.send()
-    while (await new Promise(s => next = s) < 2) {} // headers recieved
-    if (req.status !== 200) return
-    const end = Date.now()
-    const p = Math.floor((end - begin) / 2)
-    if (p > 2 && p < precision) {
-      while (await new Promise(s => next = s) < 4) {} // done
-      localStorage.timePrecision = precision = p
-      localStorage.timeOffset = offset = Number(req.responseText) + p - end
-    }
-    if (iteration++ < 3) return setTimeout(calcDiff, 150)
+    const diff = resource.responseStart - resource.requestStart
+    const fromCache = resource.transferSize == null // not set in safari, fallback to timings
+      ? diff < 25 // usually firebase is fairly slow, so something too fast will be discarded
+      : resource.transferSize === 0
+
+    if (fromCache || precision < diff || unixtime > 900000) return // we also discard more than 15min diff
+    localStorage.timePrecision = precision = diff
+    localStorage.timeOffset = offset = unixtime + Math.floor(diff / 2) - end
+    if (iteration < 3) return setTimeout(calcDiff, 150, iteration + 1)
   }
-  calcDiff()
+  calcDiff(1)
   return () => offset + Date.now()
 })()
 
