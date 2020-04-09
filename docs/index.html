@@ -113,7 +113,6 @@ body:not(.lock) #welcome,
 .out-of-range #sec,
 #bell:not(.off) #sound-off,
 #bell.off #sound-on,
-#install.installed,
 #fullscreen:not(.off) #fullscreen-off,
 #fullscreen.off #fullscreen-on { display: none }
 
@@ -161,9 +160,6 @@ body, #timer { background: #fff }
   <button id="fullscreen" class="off">
     <svg id="fullscreen-off" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m23.4 8.4h8.2v8.2h-3.2v-5h-5v-3.2z m5 20v-5h3.2v8.2h-8.2v-3.2h5z m-20-11.8v-8.2h8.2v3.2h-5v5h-3.2z m3.2 6.8v5h5v3.2h-8.2v-8.2h3.2z"></path></svg>
     <svg id="fullscreen-on" preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m26.6 13.4h5v3.2h-8.2v-8.2h3.2v5z m-3.2 18.2v-8.2h8.2v3.2h-5v5h-3.2z m-10-18.2v-5h3.2v8.2h-8.2v-3.2h5z m-5 13.2v-3.2h8.2v8.2h-3.2v-5h-5z"></path></svg>
-  </button>
-  <button id="install" class="installed">
-    <svg preserveAspectRatio="xMidYMid meet" height="50" width="50" viewBox="0 0 40 40"><path d="m8.4 30h23.2v3.4h-23.2v-3.4z m23.2-15l-11.6 11.6-11.6-11.6h6.6v-10h10v10h6.6z"></path></svg>
   </button>
 </div>
 <div id="welcome"></div>
@@ -248,7 +244,6 @@ const themeEl = document.getElementById('theme')
 const timerEl = document.getElementById('timer')
 const titleEl = document.getElementById('title')
 const messageEl = document.getElementById('message')
-const installEl = document.getElementById('install')
 const welcomeEl = document.getElementById('welcome')
 const manifestEl = document.getElementById('manifest')
 const fullscreenEl = document.getElementById('fullscreen')
