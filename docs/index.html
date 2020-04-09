@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="title" content="Nice Timer">
   <meta name="description" content="A Nice Timer">
-  <link id="manifest" rel="manifest" href="/manifest.webmanifest?version=06.04.2020">
+  <link id="manifest" rel="manifest" href="/manifest.webmanifest?version=09.04.2020">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
@@ -211,11 +211,7 @@ const play = (() => {
     return Math.floor((delay - context.currentTime) * 1000)
   }
 
-  p.sound = !context ? () => {} : sound
   p.muted = muted => _muted = Boolean(muted)
-  p.keepAlive = !context ? () => {} : off => off
-    ? (_silentSound && (_silentSound.disconnect(), _silentSound = undefined))
-    : (_silentSound || (_silentSound = play.sound(-22049)))
   p.context = context
   return p
 })()
@@ -365,7 +361,6 @@ const nextIcon = () => {
   const current = getCurrent()
   const i = icons[current.state]
   const icon = i[(Math.max(i.indexOf(current.icon), 0) + 1) % i.length]
-  console.log(icon)
   _set[current.state](iconEl.textContent = icon)
   updateData({ ...current, icon })
 }
@@ -394,7 +389,6 @@ const toggleSound = () => {
 const toggleFullScreen = () => {
   const off = document.fullscreenElement === document.documentElement
   fullscreenEl.classList.toggle('off', off)
-  mobile && play.keepAlive(!off)
   if (off) return document.exitFullscreen()
   document.documentElement.requestFullscreen()
 }
@@ -405,20 +399,25 @@ upToDate || (localStorage.clear(), localStorage.version = version)
 navigator.serviceWorker && navigator.serviceWorker.register(`/service.js?version=${version}`)
   .then(registration => upToDate || registration.update())
 
+
 // UNLOCK
 // Sound api may require an interaction, so we interact...
 welcomeEl.textContent = mobile ? 'touch to unlock' : 'click or hit any key to unlock'
-const unlock = () => {
-  removeEventListener('keydown', unlock)
-  removeEventListener('click', unlock)
+const registerAll = () => {
   timerEl.addEventListener('click', switchState)
   bellEl.addEventListener('click', toggleSound)
   iconEl.addEventListener('click', nextIcon)
   themeEl.addEventListener('click', toggleTheme)
   fullscreenEl.addEventListener('click', toggleFullScreen)
   document.body.classList.remove('lock')
+}
+
+const unlock = () => {
+  removeEventListener('keydown', unlock)
+  removeEventListener('click', unlock)
   play.muted(false)
   play('CS6.ED')
+  registerAll()
 }
 
 // INIT
@@ -427,7 +426,8 @@ setTimeout(async () => {
   const skipUnlock = noaudio || _get.sound === 'off' || play.context.currentTime > 0 || !_get.ts
   skipUnlock || addEventListener('keydown', unlock)
   skipUnlock || addEventListener('click', unlock)
-  skipUnlock && unlock()
+  skipUnlock && registerAll()
+  await navigator.wakeLock.request('display')
 })
 
 </script>

@@ -1,4 +1,4 @@
-const V = '06.04.2020'
+const V = '09.04.2020'
 
 addEventListener('install', e => e.waitUntil(caches.open(V)
   .then(cache => cache.addAll(['/']))))
