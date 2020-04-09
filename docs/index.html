@@ -211,6 +211,7 @@ const play = (() => {
     return Math.floor((delay - context.currentTime) * 1000)
   }
 
+  p.sound = !context ? () => {} : sound
   p.muted = muted => _muted = Boolean(muted)
   p.context = context
   return p
@@ -413,6 +414,7 @@ const registerAll = () => {
 }
 
 const unlock = () => {
+  mobile && (play.sound(-22000).gain.value = 0.01) // force wake lock
   removeEventListener('keydown', unlock)
   removeEventListener('click', unlock)
   play.muted(false)
@@ -423,12 +425,14 @@ const unlock = () => {
 // INIT
 update()
 setTimeout(async () => {
-  const skipUnlock = noaudio || _get.sound === 'off' || play.context.currentTime > 0 || !_get.ts
+  const skipUnlock = mobile
+    ? play.context.currentTime > 0
+    : (noaudio || _get.sound === 'off' || play.context.currentTime > 0 || !_get.stack.length)
   skipUnlock || addEventListener('keydown', unlock)
   skipUnlock || addEventListener('click', unlock)
   skipUnlock && registerAll()
-  await navigator.wakeLock.request('display')
 })
+mobile && (play.sound(-22000).gain.value = 0.01) // force wake lock
 
 </script>
 </body>
